@@ -20,10 +20,11 @@ export class ViewController{
           contextIsolation: true,
           preload: path.join(__dirname, "../preload/index.js")
         }});
+        this.baseWindow.setMenu(null);
         this.baseWindow.on("ready-to-show", ()=>{
           this.baseWindow.show();
         });
-        this.baseWindow.loadFile("./src/renderer/index.html");
+        this.baseWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
 
         this.initalizeEvents();
     }
