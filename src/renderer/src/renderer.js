@@ -130,6 +130,8 @@ function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
+window.togglePause = togglePause;
+
 /* ══════════════════════════════════════════════════════════
    RENDER
 ══════════════════════════════════════════════════════════ */
@@ -145,6 +147,10 @@ async function render() {
   for(let i = 0; i < players.length; i++){
     let p = players[i];
     let dmg = await window.mainApi.getDamageAndDPS(p.name);
+    if(!dmg){
+      removePlayer(p.name);
+      continue;
+    }
     setDamage(p.name, dmg.damage, dmg.idFound);
   }
 

@@ -47,9 +47,6 @@ function onLocalPlayerUpdate(context: any): void {
   }
 }
 
-function updatePlayerId(parametros: any): void {
-  NetworkListerner.foundPlayers[parametros[1]] = parametros[0];
-}
 
 function enterToParty(parametros: any): void {
   let playersInParty = parametros[6]
@@ -135,34 +132,35 @@ export function reloadEverything(){
     }
 }
 
-const test:any = [];
-
 function route(contexto: any) {
   let params = contexto.parameters
-
-  
-
+ 
   if (contexto.code == 3) return
 
   if(contexto.parameters["252"] >= 229 && contexto.parameters["252"] <= 250){
     console.log(params);
   }
 
+  //console.log(params);
+
   switch (contexto.parameters['252']) {
     case 229:
+      //->
       enterToParty(params)
       break
-    case 237:
-      console.log();
-      break;
-    case 230:
-      leaveParty([0, NetworkListerner.playerList[0].guid]);
-      break;
+    // case 237:
+    //   console.log();
+    //   break;
+    // case 230:
+    //   leaveParty([0, NetworkListerner.playerList[0].guid]);
+    //   break;
     case 231:
+      //->
       //Entra player party
       playerJoinParty(params)
       break
     case 233:
+      //->
       //Sale player
       leaveParty(params)
       break
@@ -183,9 +181,7 @@ function route(contexto: any) {
       obtainFame(params)
       break
     case 29:
-      //Update ID player
-      test.push(params);
-      updatePlayerId(params)
+      NetworkListerner.foundPlayers[params[1]] = params[0];
       break
   }
 }
@@ -226,22 +222,16 @@ function getIndexFromName(name: string): number {
 function playerJoinParty(parametros: any): void {
   let name = parametros[2]
   let guid = parametros[1]
-  let id = parametros[0]
 
-  if (id == -1) {
-    console.log('Nani')
-  }
-
-  let player = new Player(id, name)
-  player.guid = guid
+  let player = new Player(name, guid)
 
   NetworkListerner.playerList.push(player)
   ViewController.instance.sendPlayerAdded(player);
 }
 
 function leaveParty(parametros: any): void {
-  let numRaros = parametros['1']
-  let p = findByNumerosRaros(numRaros)
+  let guid = parametros['1']
+  let p = findByNumerosRaros(guid)
 
   if (p == undefined) return
   if (p.isLocalPlayer) {
@@ -252,14 +242,12 @@ function leaveParty(parametros: any): void {
     NetworkListerner.playerList.splice(indexP, 1)
     ViewController.instance.sendPlayerRemoved(p);
   }
-
-
 }
 
 function hitEnemy(causante:number, damage:number): void {
   if(NetworkListerner.paused) return;
   let player = findById(causante)
-  if (!player) return
+  if (!player) {return}
 
   let paquete = new DamagePacket(damage)
   player.addPacket(paquete)
