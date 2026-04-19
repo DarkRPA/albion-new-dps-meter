@@ -1,9 +1,9 @@
 {
-  "name": "new-dps-meter",
+  "name": "albion-new-dps-meter",
   "version": "1.0.0",
-  "description": "A minimal Electron application with TypeScript",
+  "description": "A simple DPS Meter for Albion Online",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "Eryos",
   "homepage": "https://electron-vite.org",
   "scripts": {
     "format": "prettier --write .",
