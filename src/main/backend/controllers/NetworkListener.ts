@@ -38,7 +38,7 @@ export class NetworkListerner {
 function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
-    let code = params['253']
+    let code = params.get(253);
     switch (code) {
       case 2:
         onMapChange(params)
@@ -49,8 +49,8 @@ function onLocalPlayerUpdate(context: any): void {
 
 
 function enterToParty(parametros: any): void {
-  let playersInParty = parametros[6]
-  let playersPeroNumerosRaros = parametros[5]
+  let playersInParty = parametros.get(6)
+  let playersPeroNumerosRaros = parametros.get(5)
 
   for (let i = 0; i < playersInParty.length; i++) {
     let p = playersInParty[i]
@@ -137,14 +137,10 @@ function route(contexto: any) {
  
   if (contexto.code == 3) return
 
-  if(contexto.parameters["252"] >= 229 && contexto.parameters["252"] <= 250){
-    console.log(params);
-  }
+  //console.log(contexto.parameters.get(252), contexto);
 
-  //console.log(params);
-
-  switch (contexto.parameters['252']) {
-    case 229:
+  switch (contexto.parameters.get(252)) {
+    case 231:
       //->
       enterToParty(params)
       break
@@ -154,26 +150,28 @@ function route(contexto: any) {
     // case 230:
     //   leaveParty([0, NetworkListerner.playerList[0].guid]);
     //   break;
-    case 231:
+    case 233:
       //->
       //Entra player party
       playerJoinParty(params)
       break
-    case 233:
+    case 235:
       //->
       //Sale player
       leaveParty(params)
       break
     case 6:
       //Golpea enemigo
-      let causante = params[6];
-      let dano = params[2];
+      let causante = params.get(6);
+      let dano = params.get(2);
       hitEnemy(causante, dano);
       break
     case 7:
-      let causantes:Array<number> = params[6];
+      console.log("TEST: ", params);
+      let causantes:Array<number> = params.get(6);
       for(let i = 0; i < causantes.length; i++){
-        hitEnemy(causantes[i], params[2][i]);
+        hitEnemy(causantes[i], params.get(2)[i]);
+        
       }
       break
     case 82:
@@ -181,7 +179,7 @@ function route(contexto: any) {
       obtainFame(params)
       break
     case 29:
-      NetworkListerner.foundPlayers[params[1]] = params[0];
+      NetworkListerner.foundPlayers[params.get(1)] = params.get(0);
       break
   }
 }
@@ -220,8 +218,8 @@ function getIndexFromName(name: string): number {
 }
 
 function playerJoinParty(parametros: any): void {
-  let name = parametros[2]
-  let guid = parametros[1]
+  let name = parametros.get(2)
+  let guid = parametros.get(1)
 
   let player = new Player(name, guid)
 
@@ -230,10 +228,13 @@ function playerJoinParty(parametros: any): void {
 }
 
 function leaveParty(parametros: any): void {
-  let guid = parametros['1']
+  let guid = parametros.get(1)
   let p = findByNumerosRaros(guid)
 
-  if (p == undefined) return
+  if (p == undefined) {
+    console.log(guid, NetworkListerner.playerList);
+    return;
+  }
   if (p.isLocalPlayer) {
     NetworkListerner.playerList = [NetworkListerner.playerList[0]];
     ViewController.instance.sendLocalPlayerLeft();
@@ -260,8 +261,8 @@ function findById(id: number) {
 }
 
 function obtainFame(parametros: any): void {
-  let cantBase = parametros[2] / 10000
-  let premium = parametros[5]
+  let cantBase = parametros.get(2) / 10000
+  let premium = parametros.get(5)
 
   let calcPremium = premium ? cantBase * 1.5 : cantBase
 
@@ -275,15 +276,15 @@ function onMapChange(params: any) {
   //NetworkListerner.foundPlayers = [];
 
   if (playerList[0] == undefined) {
-    playerList[0] = new Player(params[2])
+    playerList[0] = new Player(params.get(2));
     playerList[0].isLocalPlayer = true
-    playerList[0].guid = params[1]
+    playerList[0].guid = params.get(5);
     instance.sendPlayerAdded(playerList[0]);
   } else {
-    playerList[0].guid = params[1]
+    playerList[0].guid = params.get(1);
   }
 
-  NetworkListerner.foundPlayers[params[2]] = params[0];
+  NetworkListerner.foundPlayers[params.get(2)] = params.get(0);
 
   instance.sendMapChanged();
 
