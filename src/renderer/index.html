@@ -124,7 +124,7 @@
 
     .col-head {
       display: grid;
-      grid-template-columns: 22px 1fr 86px 70px;
+      grid-template-columns: 22px 1fr 86px 40px 70px;
       gap: 6px;
       padding: 0 10px 5px;
       font-size: 9.5px;
@@ -169,7 +169,7 @@
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: 22px 1fr 86px 70px;
+      grid-template-columns: 22px 1fr 86px 40px 70px;
       align-items: center;
       gap: 6px;
     }
@@ -214,6 +214,13 @@
       font-size: 12px;
     }
     .p-row.healer .pdmg { color: var(--heal-text); }
+
+    .ppct {
+      text-align: right;
+      font-size: 10.5px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
 
     .pdps {
       text-align: right;
@@ -403,7 +410,7 @@
   </div>
   <div class="col-head">
     <span>#</span><span>Nombre</span>
-    <span>Daño total</span><span>DPS</span>
+    <span>Daño total</span><span>%</span><span>DPS</span>
   </div>
   <div class="player-rows" id="el-rows"></div>
 </section>
@@ -416,8 +423,8 @@
   <div class="ctrl-row">
     <button class="btn-reset" id="reset-button">↺ Reiniciar</button>
     <button class="btn-ghost" id="btn-pause">⏸ Pausar</button>
-    <!-- <div class="vdiv"></div> -->
-    <!-- <button class="btn-ghost" id="btn-copiar">🎲 Copiar</button> -->
+    <div class="vdiv"></div>
+    <button class="btn-ghost" id="btn-copiar">📋 Copiar</button>
     <div class="status">
       <div class="dot off" id="el-dot"></div>
       <span id="el-status">Esperando mapa</span>

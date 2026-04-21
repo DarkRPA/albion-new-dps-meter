@@ -174,6 +174,10 @@ async function render() {
   const healOnly = list.filter((p) => p.isHealer)
   const maxDmg = Math.max(...dpsOnly.map((p) => p.dmg), 1)
   const maxHeal = Math.max(...healOnly.map((p) => Math.abs(p.dmg)), 1)
+  
+  // Total damage / healing from the group for the percentage calculation
+  const totalGroupDmg = dpsOnly.reduce((sum, p) => sum + p.dmg, 0) || 1;
+  const totalGroupHeal = healOnly.reduce((sum, p) => sum + Math.abs(p.dmg), 0) || 1;
 
   let rankDps = 0
 
@@ -192,6 +196,11 @@ async function render() {
       const pct = p.isHealer
         ? ((Math.abs(p.dmg) / maxHeal) * 100).toFixed(1)
         : ((p.dmg / maxDmg) * 100).toFixed(1)
+        
+      // Group contribution percentage
+      const groupPct = p.isHealer
+        ? ((Math.abs(p.dmg) / totalGroupHeal) * 100).toFixed(1)
+        : ((p.dmg / totalGroupDmg) * 100).toFixed(1)
 
       let rankLabel = '✚',
         rankCls = ''
@@ -208,6 +217,7 @@ async function render() {
         <span class="rank ${rankCls}">${rankLabel}</span>
         <span class="pname">${esc(p.name)}${p.isHealer ? '<span class="heal-tag">HEAL</span>' : ''}</span>
         <span class="pdmg">${fmt(p.dmg)}</span>
+        <span class="ppct">${groupPct}%</span>
         <span class="pdps">${fmt(dps)}/s</span>
       </div>
     </div>`
@@ -228,6 +238,10 @@ document.getElementById("reset-button").addEventListener("click", ()=>{
 
 document.getElementById("btn-pause").addEventListener("click", ()=>{
   togglePause();
+});
+
+document.getElementById("btn-copiar").addEventListener("click", ()=>{
+  copyDpsData();
 });
 
 /* ══════════════════════════════════════════════════════════
@@ -272,6 +286,59 @@ function _unpause() {
   document.getElementById('el-dot').classList.remove('off')
   document.getElementById('el-status').textContent = 'Activo'
   window.mainApi.sendUnpause();
+}
+
+function copyDpsData() {
+  const list = Object.values(players);
+  if (!list.length) return;
+
+  // Ordenar la lista igual que en el render principal
+  list.sort((a, b) => {
+    if (a.isHealer !== b.isHealer) return a.isHealer ? 1 : -1;
+    return a.isHealer ? a.dmg - b.dmg : b.dmg - a.dmg;
+  });
+
+  const dpsOnly = list.filter((p) => !p.isHealer);
+  const healOnly = list.filter((p) => p.isHealer);
+  
+  const totalGroupDmg = dpsOnly.reduce((sum, p) => sum + p.dmg, 0) || 1;
+  const totalGroupHeal = healOnly.reduce((sum, p) => sum + Math.abs(p.dmg), 0) || 1;
+
+  // Cabecera del texto
+  let textToCopy = "Player|Daño|DPS|porcentaje\n";
+
+  // Rellenar la información
+  for (let i = 0; i < list.length; i++) {
+    let p = list[i];
+    const groupPct = p.isHealer
+      ? ((Math.abs(p.dmg) / totalGroupHeal) * 100).toFixed(1)
+      : ((p.dmg / totalGroupDmg) * 100).toFixed(1);
+
+    textToCopy += `${p.name}|${fmt(p.dmg)}|${fmt(p.dps)}|${groupPct}%\n`;
+  }
+
+  // Crear un elemento temporal para copiar al portapapeles de manera segura
+  const textArea = document.createElement("textarea");
+  textArea.value = textToCopy;
+  textArea.style.position = "fixed";
+  textArea.style.opacity = "0";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    document.execCommand('copy');
+    
+    // Feedback visual opcional en el botón
+    const btn = document.getElementById("btn-copiar");
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✔ Copiado';
+    setTimeout(() => btn.innerHTML = originalText, 1500);
+  } catch (err) {
+    console.error('Error al copiar: ', err);
+  }
+  
+  document.body.removeChild(textArea);
 }
 
 /* ══════════════════════════════════════════════════════════

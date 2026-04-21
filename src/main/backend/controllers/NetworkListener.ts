@@ -167,7 +167,7 @@ function route(contexto: any) {
       hitEnemy(causante, dano);
       break
     case 7:
-      console.log("TEST: ", params);
+      //console.log("TEST: ", params);
       let causantes:Array<number> = params.get(6);
       for(let i = 0; i < causantes.length; i++){
         hitEnemy(causantes[i], params.get(2)[i]);
@@ -261,8 +261,8 @@ function findById(id: number) {
 }
 
 function obtainFame(parametros: any): void {
-  let cantBase = parametros.get(2) / 10000
-  let premium = parametros.get(5)
+  let cantBase = Number(parametros.get(2)) / 10000
+  let premium = Number(parametros.get(5))
 
   let calcPremium = premium ? cantBase * 1.5 : cantBase
 
