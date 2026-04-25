@@ -69,24 +69,40 @@ export class Player {
     return 6;
   }
 
-  getTotalDamage(): number{
+  getTotalDamage(heal = false): number{
     let result = 0;
     for(let i = 0; i < this.shardList.length; i++){
       let shard = this.shardList[i];
-      result += shard.getTotalDamage();
+      result += heal?shard.getTotalHealing():shard.getTotalDamage();
     }
 
     return result;
   }
 
-  getTotalDPS(): number{
+  getTotalHealing():number{
+    return this.getTotalDamage(true);
+  }
+
+  getTotalDPS(heal = false): number{
     let result = 0;
     for(let i = 0; i < this.shardList.length; i++){
       let shard = this.shardList[i];
       result += shard.getElapsedTime();
     }
 
-    return this.getTotalDamage()/result;
+    let totalDPS = 0;
+
+    if(!heal){
+      totalDPS = this.getTotalDamage()/result;
+    }else{
+      totalDPS = this.getTotalHealing()/result;
+    }
+
+    return totalDPS;
+  }
+
+  getTotalHPS():number{
+    return this.getTotalDPS(true);
   }
 
   restartDmg(){
