@@ -21,7 +21,7 @@ export class ViewController{
           preload: path.join(__dirname, "../preload/index.js")
         }});
         this.baseWindow.setIcon(path.join(__dirname, "../../resources/icon.png"));
-        //this.baseWindow.setMenu(null);
+        this.baseWindow.setMenu(null);
         this.baseWindow.on("ready-to-show", ()=>{
           this.baseWindow.show();
         });
