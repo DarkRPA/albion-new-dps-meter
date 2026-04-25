@@ -177,6 +177,7 @@ function route(contexto: any) {
     case 82:
       //Obtenemos fama
       obtainFame(params)
+      //console.log()
       break
     case 29:
       NetworkListerner.foundPlayers[params.get(1)] = params.get(0);
