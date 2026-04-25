@@ -31,7 +31,7 @@ window.mainApi.onMapLoad((data)=>{
 
 window.mainApi.onPlayerAdded((data)=>{
   if(!exists(data)){
-    setDamage(data, 0, false);
+    setDamage(data, 0, 0, false);
   }else{
   }
 });
@@ -81,7 +81,7 @@ function playerByName(name){
   return -1;
 }
 
-function setDamage(name, dmg, idFound) {
+function setDamage(name, dmg, healing, idFound) {
     //if (!mapLoaded || paused) return;
     let pFound = playerByName(name);
     if(pFound == -1) {
@@ -90,7 +90,8 @@ function setDamage(name, dmg, idFound) {
     }
     players[pFound].dmg = dmg;
     players[pFound].idFound = idFound;
-    players[pFound].isHealer = players[pFound].dmg < 0;
+    players[pFound].healing = Math.abs(healing);
+    players[pFound].isHealer = players[pFound].healing > 0;
     //render();
   };
 function setFame(amount) {
@@ -151,7 +152,7 @@ async function render() {
       removePlayer(p.name);
       continue;
     }
-    setDamage(p.name, dmg.damage, dmg.idFound);
+    setDamage(p.name, dmg.damage, dmg.healing, dmg.idFound);
   }
 
   document.getElementById('el-timer').textContent = fmtTime(ms)
@@ -173,7 +174,7 @@ async function render() {
   const dpsOnly = list.filter((p) => !p.isHealer)
   const healOnly = list.filter((p) => p.isHealer)
   const maxDmg = Math.max(...dpsOnly.map((p) => p.dmg), 1)
-  const maxHeal = Math.max(...healOnly.map((p) => Math.abs(p.dmg)), 1)
+  const maxHeal = Math.max(...healOnly.map((p) => Math.abs(p.healing)), 1)
   
   // Total damage / healing from the group for the percentage calculation
   const totalGroupDmg = dpsOnly.reduce((sum, p) => sum + p.dmg, 0) || 1;
@@ -193,10 +194,9 @@ async function render() {
   const html = list
     .map((p) => {
       const dps = p.dps
-      const pct = p.isHealer
-        ? ((Math.abs(p.dmg) / maxHeal) * 100).toFixed(1)
-        : ((p.dmg / maxDmg) * 100).toFixed(1)
-        
+      const pct = ((p.dmg / maxDmg) * 100).toFixed(1);      
+      const pctHealing = ((p.healing / maxHeal) * 100).toFixed(1);      
+
       // Group contribution percentage
       const groupPct = p.isHealer
         ? ((Math.abs(p.dmg) / totalGroupHeal) * 100).toFixed(1)
@@ -211,8 +211,9 @@ async function render() {
       }
 
       return `
-    <div class="p-row ${p.isHealer ? 'healer' : ''} ${!p.idFound ? 'not-id':''}">
+    <div class="p-row ${p.isHealer ? '' : ''} ${!p.idFound ? 'not-id':''}">
       <div class="bar" style="width:${pct}%"></div>
+      <div class="bar-heal" style="width:${pctHealing}%"></div>
       <div class="p-inner">
         <span class="rank ${rankCls}">${rankLabel}</span>
         <span class="pname">${esc(p.name)}${p.isHealer ? '<span class="heal-tag">HEAL</span>' : ''}</span>

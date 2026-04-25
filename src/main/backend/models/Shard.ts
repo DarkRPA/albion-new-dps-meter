@@ -58,7 +58,12 @@ export class Shard {
     for (let i = 0; i < this.packetList.length; i++) {
       let paqueteActual = this.packetList[i]
 
-      result += paqueteActual?.dmg!
+      if(heal && paqueteActual.healing){
+        result += paqueteActual?.dmg!
+      }else if(!heal && !paqueteActual.healing){
+        result += paqueteActual?.dmg!
+      }
+      
     }
 
     if(this.shardEnd){

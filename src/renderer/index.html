@@ -18,7 +18,7 @@
       --heal-bg:    rgba(86,201,110,.08);
       --heal-border:rgba(86,201,110,.28);
       --bar-dmg:    rgba(201,162,39,.10);
-      --bar-heal:   rgba(86,201,110,.10);
+      --bar-heal:   rgba(86, 201, 111, 0.809);
       --id-not-found-bg: rgba(214, 96, 52, 0.1);
       --id-not-found-border: rgba(214, 96, 52, 0.28);
     }
@@ -163,6 +163,15 @@
       transition: width .55s ease;
       pointer-events: none;
     }
+
+    .bar-heal {
+      position: absolute; inset: 0;
+      width: 0; height: 10%;
+      background: var(--bar-heal);
+      transition: width .55s ease;
+      pointer-events: none;
+    }
+
     .p-row.healer .bar { background: var(--bar-heal); }
 
     .p-inner {
