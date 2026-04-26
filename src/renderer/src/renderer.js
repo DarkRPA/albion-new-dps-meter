@@ -198,9 +198,7 @@ async function render() {
       const pctHealing = ((p.healing / maxHeal) * 100).toFixed(1);      
 
       // Group contribution percentage
-      const groupPct = p.isHealer
-        ? ((Math.abs(p.dmg) / totalGroupHeal) * 100).toFixed(1)
-        : ((p.dmg / totalGroupDmg) * 100).toFixed(1)
+      const groupPct = ((p.dmg / totalGroupDmg) * 100).toFixed(1)
 
       let rankLabel = '✚',
         rankCls = ''
