@@ -91,7 +91,7 @@ function setDamage(name, dmg, healing, idFound) {
     players[pFound].dmg = dmg;
     players[pFound].idFound = idFound;
     players[pFound].healing = Math.abs(healing);
-    players[pFound].isHealer = players[pFound].healing > 0;
+    players[pFound].isHealer = false;
     //render();
   };
 function setFame(amount) {
@@ -174,11 +174,11 @@ async function render() {
   const dpsOnly = list.filter((p) => !p.isHealer)
   const healOnly = list.filter((p) => p.isHealer)
   const maxDmg = Math.max(...dpsOnly.map((p) => p.dmg), 1)
-  const maxHeal = Math.max(...healOnly.map((p) => Math.abs(p.healing)), 1)
+  const maxHeal = Math.max(...dpsOnly.map((p) => Math.abs(p.healing)), 1)
   
   // Total damage / healing from the group for the percentage calculation
   const totalGroupDmg = dpsOnly.reduce((sum, p) => sum + p.dmg, 0) || 1;
-  const totalGroupHeal = healOnly.reduce((sum, p) => sum + Math.abs(p.dmg), 0) || 1;
+  const totalGroupHeal = dpsOnly.reduce((sum, p) => sum + Math.abs(p.healing), 0) || 1;
 
   let rankDps = 0
 
