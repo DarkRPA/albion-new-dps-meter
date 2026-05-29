@@ -7,7 +7,7 @@
 import { Shard } from './Shard.js'
 import { DamagePacket } from './DamagePacket.js'
 
-export const GLOBAL_PULL_TIME = 2;
+export const GLOBAL_PULL_TIME = 6;
 
 export class Player {
   guid: Array<Number> = []
