@@ -10,7 +10,7 @@
       "windows": {
         "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-vite.cmd"
       },
-      "runtimeArgs": ["--sourcemap","--","--no-sandbox"],
+      "runtimeArgs": ["--sourcemap","--","--no-sandbox", "--disable-gpu"],
       "env": {
         "REMOTE_DEBUGGING_PORT": "9222",
         "DISABLE_ELECTRON_SANDBOX": "1"
