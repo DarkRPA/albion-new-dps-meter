@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/no-wrapper-object-types */
@@ -134,7 +135,7 @@ export function reloadEverything(){
 
 function route(contexto: any) {
   let params = contexto.parameters
- 
+
   if (contexto.code == 3) return
 
   //console.log(contexto.parameters.get(252), contexto);
@@ -171,7 +172,7 @@ function route(contexto: any) {
       let causantes:Array<number> = params.get(6);
       for(let i = 0; i < causantes.length; i++){
         hitEnemy(causantes[i], params.get(2)[i]);
-        
+
       }
       break
     case 82:

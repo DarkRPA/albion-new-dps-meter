@@ -57,6 +57,8 @@ export class ViewController{
 
         let result:any = {
           damage: player.getTotalDamage(),
+          healing: player.getTotalHealing(),
+          hps: Number.isNaN(player.getTotalHPS())?0:player.getTotalHPS(),
           dps: Number.isNaN(player.getTotalDPS())?0:player.getTotalDPS(),
           idFound: NetworkListerner.playerHasId(name)
         }

@@ -9,6 +9,7 @@ export class Shard {
   packetList: Array<DamagePacket> = []
   lastPacket: DamagePacket | null = null
   finalDamage:number|undefined;
+  finalHealing:number|undefined;
   finalElapsedTime:number|undefined;
   shardStart: number = 0
   shardEnd: number = 0
@@ -41,24 +42,43 @@ export class Shard {
     return Math.abs(p1.timestamp - p0.timestamp) / 1000 > this.averageTimePerPull
   }
 
-  getTotalDamage(): number {
+  getTotalDamage(heal = false): number {
     let result: number = 0
 
-    if(this.shardEnd && this.finalDamage){
-      return this.finalDamage;
+    if(this.shardEnd){
+      if(heal && this.finalHealing){
+        return this.finalHealing;
+      }
+
+      if(!heal && this.finalDamage){
+        return this.finalDamage;
+      }
     }
 
     for (let i = 0; i < this.packetList.length; i++) {
       let paqueteActual = this.packetList[i]
 
-      result += paqueteActual?.dmg!
+      if(heal && paqueteActual.healing){
+        result += paqueteActual?.dmg!
+      }else if(!heal && !paqueteActual.healing){
+        result += paqueteActual?.dmg!
+      }
+      
     }
 
     if(this.shardEnd){
-      this.finalDamage = result;
+      if(!heal){
+        this.finalDamage = result;
+      }else{
+        this.finalHealing = result;
+      }
     }
 
     return result
+  }
+
+  getTotalHealing(){
+    return this.getTotalDamage(true);
   }
 
   getElapsedTime(): number {
@@ -81,10 +101,21 @@ export class Shard {
     return result;
   }
 
-  getDPS(): number {
+  getDPS(heal = false): number {
     if (this.packetList.length <= 1) return 0
-    let result = this.getTotalDamage() / this.getElapsedTime()
+    let result = 0;
+
+    if(!heal){
+      result = this.getTotalDamage() / this.getElapsedTime()
+    }else{
+      result = this.getTotalHealing() / this.getElapsedTime()
+    }
+
     if (Number.isNaN(result)) return 0
     return result
+  }
+
+  getHPS(){
+    return this.getDPS(true);
   }
 }
