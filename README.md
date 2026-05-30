@@ -36,4 +36,4 @@ The final command should look something like this.
 
 And then it should be on and ready.
 
-[image](https://i.postimg.cc/wTHLtpt0/image.png)
+![image](https://i.postimg.cc/wTHLtpt0/image.png)
