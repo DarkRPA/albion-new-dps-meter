@@ -6,16 +6,20 @@
 /* eslint-disable @typescript-eslint/no-wrapper-object-types */
 import { Shard } from './Shard.js'
 import { DamagePacket } from './DamagePacket.js'
+import { Item } from './inventory/Item.js';
+import { NetworkListerner } from '../controllers/NetworkListener.js';
 
 export const GLOBAL_PULL_TIME = 6;
 
 export class Player {
-  guid: Array<Number> = []
-  name: string = ''
-  shardList: Array<Shard> = []
-  activeShard: Shard | null = null
-  averageTimeBetweenPulls: number = 6
-  isLocalPlayer: boolean = false
+  guid: Array<Number> = [];
+  name: string = '';
+  shardList: Array<Shard> = [];
+  activeShard: Shard | null = null;
+  averageTimeBetweenPulls: number = 6;
+  isLocalPlayer: boolean = false;
+  equippedWeapon: Item|undefined;
+  rawEquipment:Array<number> = [];
 
   constructor(name: string, guid?: Array<Number>) {
     //this.id = Math.floor((Math.random()*10))
@@ -108,5 +112,22 @@ export class Player {
   restartDmg(){
     this.activeShard = null;
     this.shardList = [];
+  }
+
+  getWeaponImage(){
+    if(!this.equippedWeapon){
+      if(NetworkListerner.foundPlayers[this.name])
+        this.equipmentChanged(NetworkListerner.foundPlayers[this.name][1]);
+      if(!this.equippedWeapon) return "https://render.albiononline.com/v1/item/T3_MAIN_AXE.png";
+    };
+    return this.equippedWeapon.getRenderUrl();
+  }
+
+  equipmentChanged(newEquipment:Array<number>){
+    if(newEquipment[0] != this.rawEquipment[0]){
+      //Se ha cambiado el arma
+      this.equippedWeapon = Item.getItem(newEquipment[0]);
+    }
+    this.rawEquipment = newEquipment;
   }
 }

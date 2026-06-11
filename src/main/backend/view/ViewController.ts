@@ -8,6 +8,7 @@ import { BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import { findByName, NetworkListerner, reloadEverything } from "../controllers/NetworkListener";
 import { Player } from "../models/Player";
+import { version } from "../../../../package.json";
 
 export class ViewController{
     private baseWindow:BrowserWindow;
@@ -21,9 +22,10 @@ export class ViewController{
           preload: path.join(__dirname, "../preload/index.js")
         }});
         this.baseWindow.setIcon(path.join(__dirname, "../../resources/icon.png"));
-        this.baseWindow.setMenu(null);
+        //this.baseWindow.setMenu(null);
         this.baseWindow.on("ready-to-show", ()=>{
           this.baseWindow.show();
+          this.baseWindow.title = `Albion New Dps Meter - V${version}`;
         });
         this.baseWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
 
@@ -60,7 +62,8 @@ export class ViewController{
           healing: player.getTotalHealing(),
           hps: Number.isNaN(player.getTotalHPS())?0:player.getTotalHPS(),
           dps: Number.isNaN(player.getTotalDPS())?0:player.getTotalDPS(),
-          idFound: NetworkListerner.playerHasId(name)
+          idFound: NetworkListerner.playerHasId(name),
+          weaponImage: player.getWeaponImage()
         }
 
         return result;

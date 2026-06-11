@@ -16,7 +16,8 @@ export class NetworkListerner {
   static playerList: Array<Player> = []
   static totalFame: number = 0
   static paused:boolean = false;
-  static foundPlayers:Array<number> = [];
+  static foundPlayers:Array<Array<any>> = [];
+  static equipmentItems:Array<number> = []
 
   public init(): void {
     if (this.networkInstance == undefined) {
@@ -40,6 +41,7 @@ function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
     let code = params.get(253);
+    console.log(params);
     switch (code) {
       case 2:
         onMapChange(params)
@@ -52,11 +54,20 @@ function onLocalPlayerUpdate(context: any): void {
 function enterToParty(parametros: any): void {
   let playersInParty = parametros.get(6)
   let playersPeroNumerosRaros = parametros.get(5)
+  let split:Array<Array<number>> = [];
+
+  for(let i = 0; i < playersPeroNumerosRaros.length; i += 16){
+    let fixedGuid:Array<number> = [];
+    for(let x = i; x < (i + 16) ; x++){
+      fixedGuid.push(playersPeroNumerosRaros[x]);
+    }
+    split.push(fixedGuid);
+  }
 
   for (let i = 0; i < playersInParty.length; i++) {
     let p = playersInParty[i]
     if (findByName(p)) continue
-    let nP = playersPeroNumerosRaros[i]
+    let nP = split[i]
 
     let player = new Player(p)
 
@@ -77,7 +88,7 @@ export function findByName(value: string | number, byName = true): Player | unde
     } else {
       if(NetworkListerner.foundPlayers[pList[i].name]){
         //Somehow the player got its id messed up by a lot
-        let idFromFound = NetworkListerner.foundPlayers[pList[i].name];
+        let idFromFound = NetworkListerner.foundPlayers[pList[i].name][0];
         if(idFromFound == value){
           return pList[i];
         }
@@ -138,8 +149,6 @@ function route(contexto: any) {
 
   if (contexto.code == 3) return
 
-  //console.log(contexto.parameters.get(252), contexto);
-
   switch (contexto.parameters.get(252)) {
     case 231:
       //->
@@ -161,6 +170,12 @@ function route(contexto: any) {
       //Sale player
       leaveParty(params)
       break
+    case 90:
+      //Se ha cambiado el equipamiento
+      let player:Player|undefined = findById(params.get(0));
+      if(!player) return;
+
+      player.equipmentChanged(params.get(2));
     case 6:
       //Golpea enemigo
       let causante = params.get(6);
@@ -181,8 +196,14 @@ function route(contexto: any) {
       //console.log()
       break
     case 29:
-      NetworkListerner.foundPlayers[params.get(1)] = params.get(0);
+      NetworkListerner.foundPlayers[params.get(1)] =  [params.get(0),  params.get(40)];
+      let p = findByName(params.get(1));
+      if(!p) return;
+      p.equipmentChanged(NetworkListerner.foundPlayers[params.get(1)][1]);
       break
+    case 30:
+      NetworkListerner.equipmentItems[params.get(0)] = params.get(1);
+      break;
   }
 }
 
@@ -262,6 +283,19 @@ function findById(id: number) {
   return findByName(id, false)
 }
 
+function findItemByWorldID(id:number){
+  return NetworkListerner.equipmentItems[id] || 0;
+}
+
+function convertWorldIdInvetory(inventory:Array<number>):Array<number>{
+  let result:Array<number> = [];
+  for(let i = 0; i < inventory.length; i++){
+    result[i] = findItemByWorldID(inventory[i]);
+  }
+
+  return result;
+}
+
 function obtainFame(parametros: any): void {
   let cantBase = Number(parametros.get(2)) / 10000
   let premium = Number(parametros.get(5))
@@ -285,10 +319,15 @@ function onMapChange(params: any) {
   } else {
     playerList[0].guid = params.get(1);
   }
-
-  NetworkListerner.foundPlayers[params.get(2)] = params.get(0);
-
+  let inventory = params.get(52);
+  
+  NetworkListerner.foundPlayers[params.get(2)] = [params.get(0), convertWorldIdInvetory(inventory)];
+  let player:Player|undefined = findById(params.get(0));
   instance.sendMapChanged();
+
+  if(!player) return;
+
+  player.equipmentChanged(NetworkListerner.foundPlayers[params.get(2)][1]);
 
   //for(let i = 0; i < playerList.length; i++){
   //    let p = playerList[i];

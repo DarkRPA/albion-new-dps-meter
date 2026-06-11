@@ -124,7 +124,7 @@
 
     .col-head {
       display: grid;
-      grid-template-columns: 22px 1fr 86px 40px 70px;
+      grid-template-columns: 68px 1fr 86px 40px 70px;
       gap: 6px;
       padding: 0 10px 5px;
       font-size: 9.5px;
@@ -178,17 +178,28 @@
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: 22px 1fr 86px 40px 70px;
+      grid-template-columns: 68px 1fr 86px 40px 70px;
       align-items: center;
       gap: 6px;
     }
 
     .rank {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 10px;
       font-weight: 800;
       text-align: center;
       color: var(--muted);
     }
+
+    .rank-icon {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
     .r1 { color: #ffd700; }
     .r2 { color: #b0b0b0; }
     .r3 { color: #cd7f32; }

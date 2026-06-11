@@ -28,5 +28,8 @@ contextBridge.exposeInMainWorld('mainApi', {
   getPlayers: () => ipcRenderer.invoke("get-players"),
   sendReset: () => ipcRenderer.send("reset"),
   sendPause: () => ipcRenderer.send("pause"),
-  sendUnpause: () => ipcRenderer.send("unpause")
+  sendUnpause: () => ipcRenderer.send("unpause"),
+  onGetVersion: (callback: (data:any)=>void)=>{
+    ipcRenderer.on("version", (_event, data)=>callback(data));
+  }
 });
