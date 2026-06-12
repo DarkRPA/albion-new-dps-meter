@@ -7,7 +7,7 @@
 import { BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import { findByName, NetworkListerner, reloadEverything } from "../controllers/NetworkListener";
-import { Player } from "../models/Player";
+import { Player } from "../models/entities/Player";
 import { version } from "../../../../package.json";
 
 export class ViewController{

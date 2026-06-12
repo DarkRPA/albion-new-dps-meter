@@ -6,19 +6,33 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { App } from 'ao-network-revitalized/index.js'
-import { Player } from '../models/Player.js'
-import { DamagePacket } from '../models/DamagePacket.js'
+import { Player } from '../models/entities/Player.js'
+import { DamagePacket } from '../models/damage/DamagePacket.js'
 import { Main } from '../../index.js'
 import { ViewController } from '../view/ViewController.js'
 
+/**
+ * Clase NetworkListener, se encarga de inicializar el servicio de escucha del paquete ao-network-revitalized
+ * y maneja los eventos que vamos recibiendo por parte de Albion Online
+ */
 export class NetworkListerner {
-  private networkInstance: App | undefined
-  static playerList: Array<Player> = []
-  static totalFame: number = 0
+  //La instancia de la ao-network
+  private networkInstance: App | undefined;
+  //Una lista de todos los usuarios core de la aplicacion, por ejemplo, usuarios de la party
+  static playerList: Array<Player> = [];
+  //Fama total
+  static totalFame: number = 0;
+  //Pausado
   static paused:boolean = false;
+  //Lista de los jugadores no importantes, esta lista se utiliza primordialmente para registrar todos los usuarios
+  //que no están en la party y que por consecuencia no son relevantes, solo se guardan sus id's en el mundo, su nombre
+  //y su inventario.
   static foundPlayers:Array<Array<any>> = [];
-  static equipmentItems:Array<number> = []
+  //Lo mismo que foundPlayers pero para objetos
+  //TODO: Refactorizar todo esto pues no es nada eficiente ni facil de leer.
+  static equipmentItems:Array<number> = [];
 
+  //Punto de entrada del programa.
   public init(): void {
     if (this.networkInstance == undefined) {
       this.networkInstance = new App(false)
@@ -26,17 +40,26 @@ export class NetworkListerner {
     }
   }
 
+  /**
+   * Inicializador de los listeners de eventos
+   */
   private startEventListeners(): void {
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.Event, route);
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.OperationResponse, onLocalPlayerUpdate)
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.OperationRequest, onLocalPlayerUpdate)
   }
 
+
   public static playerHasId(name:string){
     return (NetworkListerner.foundPlayers[name] != undefined);
   }
 }
 
+/**
+ * Funcion encargada de actualizar el estado del jugador local, primordialmente utilizado para
+ * los cambios de mapa.
+ * @param context El contexto obtenido por ao-network
+ */
 function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
@@ -44,6 +67,7 @@ function onLocalPlayerUpdate(context: any): void {
     console.log(params);
     switch (code) {
       case 2:
+        //TODO: Sacar y registrar más información como por ejemplo el mapa al que ha zoneado.
         onMapChange(params)
         break
     }
@@ -51,11 +75,20 @@ function onLocalPlayerUpdate(context: any): void {
 }
 
 
+/**
+ * Funcion encargada de controlar el evento de ingreso a una party
+ * @param parametros Los parametros obtenidos desde ao-network
+ */
 function enterToParty(parametros: any): void {
+  //Jugadores en la party
   let playersInParty = parametros.get(6)
+  //TODO: Refactorizar estas variables pues ya sabemos que los "numeros raros" son el GUID del usuario
   let playersPeroNumerosRaros = parametros.get(5)
+  //Anteriormente los GUID los daban en un array y cada posicion del array era un sub array de 16 bytes
+  //cada subarray era un GUID, ahora no se divide en sub arrays por lo que hay que separarlos manualmente
   let split:Array<Array<number>> = [];
 
+  //Separamos los GUID's de forma manual saltando de 16 bytes en 16 bytes
   for(let i = 0; i < playersPeroNumerosRaros.length; i += 16){
     let fixedGuid:Array<number> = [];
     for(let x = i; x < (i + 16) ; x++){
@@ -64,6 +97,7 @@ function enterToParty(parametros: any): void {
     split.push(fixedGuid);
   }
 
+  //Iteramos cada jugador en la party
   for (let i = 0; i < playersInParty.length; i++) {
     let p = playersInParty[i]
     if (findByName(p)) continue
@@ -77,6 +111,13 @@ function enterToParty(parametros: any): void {
   }
 }
 
+/**
+ * Funcion encargada de buscar un usuario en concreto por ID o por nombre,
+ * este metodo solo busca a usuarios que se consideran de relevancia.
+ * @param value El ID o nombre del usuario que se va a buscar
+ * @param byName Si en este caso se va a buscar por nombre en vez de por ID
+ * @returns Una entidad Player o indefinido si no se ha encontrado nada.
+ */
 export function findByName(value: string | number, byName = true): Player | undefined {
   //Devolvemos el usuario local
   let pList = NetworkListerner.playerList
@@ -98,45 +139,20 @@ export function findByName(value: string | number, byName = true): Player | unde
   return undefined;
 }
 
-// function formatNumber(num: number): string {
-//   let result = ''
-//   let numCalc = 0
-//   if (num >= 10e2 && num < 1 * 10e5) {
-//     numCalc = Math.round((num / 10e2) * 100) / 100
-//     result = `${numCalc}k`
-//   } else if (num >= 10e5) {
-//     numCalc = Math.round((num / 10e5) * 100) / 100
-//     result = `${numCalc}m`
-//   } else {
-//     result = '' + Math.round(num)
-//   }
-
-//   return result
-// }
-
+//TODO: Migrar la logica a diferentes controladores
+/**
+ * Calcula la fama por hora
+ * @returns La fama por hora
+ */
 export function getFamePerHour() {
   let momentoActual = performance.now()
   let diff = (momentoActual - Main.StartingTime) / 1000
   let famePerHour = (NetworkListerner.totalFame / diff) * 3600
   return famePerHour
 }
-
-// //function copyToClipboard(){
-//     let playerData = getPlayerData();
-
-//     let resultTest = "Player;Damage;DPS";
-
-//     for(let i = 0; i < playerData.length; i++){
-//         let p = playerData[i];
-//         let s = `\n${p[0]};${p[1]};${p[2]}`;
-//         resultTest += s;
-//     }
-
-//     try{
-//         copy(resultTest);
-//     }catch(err){}
-// }
-
+/**
+ * Reinicializa todas las variables a 0
+ */
 export function reloadEverything(){
     NetworkListerner.totalFame = 0;
     for(let i = 0; i < NetworkListerner.playerList.length; i++){
@@ -144,6 +160,12 @@ export function reloadEverything(){
     }
 }
 
+/**
+ * Funcion route, recibe los paquetes de ao-network y dependiendo de su codigo de evento
+ * los redirige a un lado u a otro.
+ * @param contexto El contexto recibido por ao-network
+ * @returns void
+ */
 function route(contexto: any) {
   let params = contexto.parameters
 
@@ -207,6 +229,7 @@ function route(contexto: any) {
   }
 }
 
+//TODO: Refactorizar esta funcion, sabemos que los numeros raros son el GUID
 function findByNumerosRaros(numeros: Array<number>) {
   for (let i = 0; i < NetworkListerner.playerList.length; i++) {
     let playerNums = NetworkListerner.playerList[i]
@@ -218,6 +241,12 @@ function findByNumerosRaros(numeros: Array<number>) {
   return undefined
 }
 
+/**
+ * Funcion encargada de comprobar si un GUID proporcionado corresponde a un usuario en concreto
+ * @param player La entidad del jugador
+ * @param numeros Su GUID
+ * @returns bool Dependiendo si el GUID del jugador proporcionado es igual que el GUID proporcionado    
+ */
 function checkNumbers(player: Player, numeros: Array<number>) {
   if (!player) return false
   let playerNums = player.guid
@@ -231,6 +260,12 @@ function checkNumbers(player: Player, numeros: Array<number>) {
   return found
 }
 
+/**
+ * Funcion encargada de iterar el array de usuario no relevantes y comprobar si el nombre está presente
+ * en caso de que lo esté, lo devuelve
+ * @param name Nombre del usuario
+ * @returns number El ID del usuario en el mapa
+ */
 function getIndexFromName(name: string): number {
   for (let i = 0; i < NetworkListerner.playerList.length; i++) {
     let p = NetworkListerner.playerList[i]
@@ -240,6 +275,10 @@ function getIndexFromName(name: string): number {
   return -1
 }
 
+/**
+ * Funcion encargada de gestionar el evento de entrada de un usuario a la party del usuario local
+ * @param parametros Los parametros de ao-network
+ */
 function playerJoinParty(parametros: any): void {
   let name = parametros.get(2)
   let guid = parametros.get(1)
@@ -250,6 +289,10 @@ function playerJoinParty(parametros: any): void {
   ViewController.instance.sendPlayerAdded(player);
 }
 
+/**
+ * Funcion encargada de gestionar el evento de salida de un usuario a la party del usuario local o el mismo usuario local
+ * @param parametros Los parametros de ao-network
+ */
 function leaveParty(parametros: any): void {
   let guid = parametros.get(1)
   let p = findByNumerosRaros(guid)
@@ -268,6 +311,12 @@ function leaveParty(parametros: any): void {
   }
 }
 
+/**
+ * Funcion encargada de gestionar el evento de golpear a una entidad en el mundo.
+ * @param causante El ID del mundo del causante
+ * @param damage El Daño causado
+ * @returns void
+ */
 function hitEnemy(causante:number, damage:number): void {
   if(NetworkListerner.paused) return;
   let player = findById(causante)

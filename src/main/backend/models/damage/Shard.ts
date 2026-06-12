@@ -2,7 +2,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { DamagePacket } from './DamagePacket.js'
-import { GLOBAL_PULL_TIME, Player } from './Player.js'
+import { GLOBAL_PULL_TIME, Player } from '../entities/Player.js'
 
 export class Shard {
   averageTimePerPull: number = 0

@@ -4,14 +4,15 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-wrapper-object-types */
-import { Shard } from './Shard.js'
-import { DamagePacket } from './DamagePacket.js'
-import { Item } from './inventory/Item.js';
-import { NetworkListerner } from '../controllers/NetworkListener.js';
+import { Shard } from '../damage/Shard.js'
+import { DamagePacket } from '../damage/DamagePacket.js'
+import { Item } from '../inventory/Item.js';
+import { NetworkListerner } from '../../controllers/NetworkListener.js';
+import { Entity } from './Entity.js';
 
 export const GLOBAL_PULL_TIME = 6;
 
-export class Player {
+export class Player extends Entity{
   guid: Array<Number> = [];
   name: string = '';
   shardList: Array<Shard> = [];
@@ -22,6 +23,7 @@ export class Player {
   rawEquipment:Array<number> = [];
 
   constructor(name: string, guid?: Array<Number>) {
+    super();
     //this.id = Math.floor((Math.random()*10))
     if(guid)
       this.guid = guid;
