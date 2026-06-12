@@ -21,7 +21,6 @@ export class Equipment{
             switch(i){
                 case 0:
                     this.mainWeapon = Item.getItem(equipment[i]);
-                    //TODO: Confirmar que este es el orden correcto
                     break;
                 case 1:
                     this.offhand = Item.getItem(equipment[i]);
@@ -35,19 +34,19 @@ export class Equipment{
                 case 4:
                     this.shoes = Item.getItem(equipment[i]);
                     break;
-                case 5:
+                case 6:
                     this.cape = Item.getItem(equipment[i]);
                     break;
-                case 6:
+                case 9:
                     this.food = Item.getItem(equipment[i]);
                     break;
-                case 7:
+                case 8:
                     this.potion = Item.getItem(equipment[i]);
                     break;
-                case 8:
+                case 5:
                     this.backpack = Item.getItem(equipment[i]);
                     break;
-                case 9:
+                case 7:
                     this.mount = Item.getItem(equipment[i]);
                     break;
 

@@ -26,4 +26,8 @@ export abstract class Entity{
     setWorldId(id:number){
         this.worldId = id;
     }
+
+    setWorldMap(map:string){
+        this.map = map;
+    }
 }

@@ -13,6 +13,10 @@ export class Inventory{
         }
     }
 
+    setEquipment(equipment:Equipment){
+        this.equipment = equipment;
+    }
+
     updateEquipment(equipment:Array<number>){
         this.equipment.loadEquipment(equipment);
     }

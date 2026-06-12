@@ -37,7 +37,6 @@ export class NetworkListerner {
   //que no están en la party y que por consecuencia no son relevantes, solo se guardan sus id's en el mundo, su nombre
   //y su inventario.
   //Lo mismo que foundPlayers pero para objetos
-  //TODO: Refactorizar todo esto pues no es nada eficiente ni facil de leer.
 
   //Punto de entrada del programa.
   public init(): void {
@@ -66,10 +65,11 @@ function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
     let code = params.get(253);
-    console.log(params);
+    //console.log(params);
     switch (code) {
       case 2:
         //TODO: Sacar y registrar más información como por ejemplo el mapa al que ha zoneado.
+        //El mapa es el parametro(8)
         onMapChange(params)
         break
     }
@@ -151,6 +151,7 @@ function route(contexto: any) {
     case 235:
       //->
       //Sale player
+      console.log(235, params);
       leaveParty(params)
       break
     case 90:
@@ -171,7 +172,6 @@ function route(contexto: any) {
       let causantes:Array<number> = params.get(6);
       for(let i = 0; i < causantes.length; i++){
         hitEnemy(causantes[i], params.get(2)[i]);
-
       }
       break
     case 82:
@@ -180,9 +180,12 @@ function route(contexto: any) {
       //console.log()
       break
     case 29:
-      let rawPlayer:RawPlayer = new RawPlayer(params.get(0), "", params.get(1), Guid.PLACEHOLDER_GUID);
+      let rawPlayer:RawPlayer = new RawPlayer(params.get(0), ENTITY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1), Guid.PLACEHOLDER_GUID);
       rawPlayer.inventory.updateEquipment(params.get(40));
       ENTITY_CONTROLLER.addRawPlayer(rawPlayer);
+
+      PARTY_CONTROLLER.updatePlayerFromRawData(rawPlayer);
+
       break;
     // case 29:
     //   NetworkListerner.foundPlayers[params.get(1)] =  [params.get(0),  params.get(40)];
@@ -191,7 +194,7 @@ function route(contexto: any) {
     //   p.equipmentChanged(NetworkListerner.foundPlayers[params.get(1)][1]);
     //   break
     case 30:
-      let itemEntity:ItemEntity = new ItemEntity(params.get(0), "", params.get(1));
+      let itemEntity:ItemEntity = new ItemEntity(params.get(0), ENTITY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1));
       ENTITY_CONTROLLER.addItemEntity(itemEntity);
       break;
   }
@@ -205,11 +208,12 @@ function playerJoinParty(parametros: any): void {
   let name = parametros.get(2)
   let guid:Guid = new Guid(parametros.get(1))
   let players:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerByName(name);
-  let player;
+  let player:Player;
 
   if(players.length > 0){
     let rawP:RawPlayer = players[0];
     player = new Player(rawP.getWorldId(), rawP.getWorldMap(), name, guid);
+    player.inventory.setEquipment(rawP.inventory.getEquipment());
   }else{
     player = new Player(0, "", name, guid);
   }
@@ -224,7 +228,7 @@ function playerJoinParty(parametros: any): void {
  */
 function leaveParty(parametros: any): void {
   let guid = parametros.get(1)
-  let p:Player|undefined = PARTY_CONTROLLER.getPlayerFromGuid(guid);
+  let p:Player|undefined = PARTY_CONTROLLER.getPlayerFromGuid(new Guid(guid));
 
   if (p == undefined) {
     console.log(guid, PARTY_CONTROLLER.membersInParty);
@@ -249,8 +253,25 @@ function leaveParty(parametros: any): void {
 function hitEnemy(causante:number, damage:number): void {
   if(NetworkListerner.paused) return;
   let players:Array<Player> = PARTY_CONTROLLER.getPartyMemberfromID(causante);
-  if (players.length <= 0) {return}
+  let rawPlayer:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerById(causante);
+  if(rawPlayer.length == 0) return;
+
+  if (players.length <= 0) {
+    //Intentamos encontrar a ver si tenemos su ID en el controlador de entidades
+    let foundPartyPlayer:Array<Player> = PARTY_CONTROLLER.getPartyMemberFromName(rawPlayer[0].getName());
+    if(foundPartyPlayer.length == 0) return;
+    foundPartyPlayer[0].setWorldId(rawPlayer[0].getWorldId());
+
+    hitEnemy(causante, damage);
+    return;
+  }
+
   let player = players[0];
+
+  // Si por temas de albion el equipamiento del jugador no ha llegado se lo reiniciamos desde los datos que hemos recibido en el paquete 29
+  if(player.inventory.getEquipment().mainWeapon == undefined){
+    player.inventory = rawPlayer[0].inventory;
+  }
 
   let paquete = new DamagePacket(damage)
   player.addPacket(paquete)
@@ -276,7 +297,7 @@ function onMapChange(params: any) {
   let localPlayer:Player;
 
   if (ENTITY_CONTROLLER.localPlayer == undefined) {
-    localPlayer = new Player(params.get(0), "", params.get(2), params.get(5));
+    localPlayer = new Player(params.get(0), params.get(8), params.get(2), new Guid(params.get(1)));
     localPlayer.isLocalPlayer = true;
     ENTITY_CONTROLLER.loadLocalPlayer(localPlayer);
 
@@ -284,6 +305,7 @@ function onMapChange(params: any) {
   } else {
     ENTITY_CONTROLLER.localPlayer.setWorldId(params.get(0));
     localPlayer = ENTITY_CONTROLLER.localPlayer;
+    localPlayer.setWorldMap(params.get(8));
   }
   let equipment = params.get(52);
   let cast:Array<ItemEntity> = [];
