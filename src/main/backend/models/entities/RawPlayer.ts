@@ -5,5 +5,15 @@ import { Guid } from "./Guid";
 export class RawPlayer extends Entity{
     protected name:string = "";
     protected guid:Guid = Guid.PLACEHOLDER_GUID;
-    protected inventory:Inventory = new Inventory();
+    public inventory:Inventory = new Inventory();
+
+    constructor(worldId:number = -1, map:string = "", name:string, guid:Guid){
+        super(worldId, map);
+        this.name = name;
+        this.guid = guid;
+    }
+
+    getName(){
+        return this.name;
+    }
 }

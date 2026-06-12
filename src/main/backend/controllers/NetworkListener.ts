@@ -10,6 +10,14 @@ import { Player } from '../models/entities/Player.js'
 import { DamagePacket } from '../models/damage/DamagePacket.js'
 import { Main } from '../../index.js'
 import { ViewController } from '../view/ViewController.js'
+import { PartyController } from './PartyController.js'
+import { EntityController } from './EntityController.js'
+import { StatisticController } from './StatisticController.js'
+import { Guid } from '../models/entities/Guid.js'
+
+export const PARTY_CONTROLLER = new PartyController();
+export const ENTITY_CONTROLLER = new EntityController();
+export const STATISTIC_CONTROLLER = new StatisticController();
 
 /**
  * Clase NetworkListener, se encarga de inicializar el servicio de escucha del paquete ao-network-revitalized
@@ -19,18 +27,14 @@ export class NetworkListerner {
   //La instancia de la ao-network
   private networkInstance: App | undefined;
   //Una lista de todos los usuarios core de la aplicacion, por ejemplo, usuarios de la party
-  static playerList: Array<Player> = [];
   //Fama total
-  static totalFame: number = 0;
   //Pausado
   static paused:boolean = false;
   //Lista de los jugadores no importantes, esta lista se utiliza primordialmente para registrar todos los usuarios
   //que no están en la party y que por consecuencia no son relevantes, solo se guardan sus id's en el mundo, su nombre
   //y su inventario.
-  static foundPlayers:Array<Array<any>> = [];
   //Lo mismo que foundPlayers pero para objetos
   //TODO: Refactorizar todo esto pues no es nada eficiente ni facil de leer.
-  static equipmentItems:Array<number> = [];
 
   //Punto de entrada del programa.
   public init(): void {
@@ -47,11 +51,6 @@ export class NetworkListerner {
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.Event, route);
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.OperationResponse, onLocalPlayerUpdate)
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.OperationRequest, onLocalPlayerUpdate)
-  }
-
-
-  public static playerHasId(name:string){
-    return (NetworkListerner.foundPlayers[name] != undefined);
   }
 }
 
@@ -82,19 +81,18 @@ function onLocalPlayerUpdate(context: any): void {
 function enterToParty(parametros: any): void {
   //Jugadores en la party
   let playersInParty = parametros.get(6)
-  //TODO: Refactorizar estas variables pues ya sabemos que los "numeros raros" son el GUID del usuario
-  let playersPeroNumerosRaros = parametros.get(5)
+  let playersGuid = parametros.get(5)
   //Anteriormente los GUID los daban en un array y cada posicion del array era un sub array de 16 bytes
   //cada subarray era un GUID, ahora no se divide en sub arrays por lo que hay que separarlos manualmente
-  let split:Array<Array<number>> = [];
+  let split:Array<Guid> = [];
 
   //Separamos los GUID's de forma manual saltando de 16 bytes en 16 bytes
-  for(let i = 0; i < playersPeroNumerosRaros.length; i += 16){
+  for(let i = 0; i < playersGuid.length; i += 16){
     let fixedGuid:Array<number> = [];
     for(let x = i; x < (i + 16) ; x++){
-      fixedGuid.push(playersPeroNumerosRaros[x]);
+      fixedGuid.push(playersGuid[x]);
     }
-    split.push(fixedGuid);
+    split.push(new Guid(fixedGuid));
   }
 
   //Iteramos cada jugador en la party

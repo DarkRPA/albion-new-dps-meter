@@ -1,13 +1,22 @@
+import { Equipment } from "./Equipment";
+import { Item } from "./Item";
 
 export class Inventory{
-    private inventory:Array<number> = [];
-    private equipment:Array<number> = []
+    private inventory:Array<Item> = [];
+    private equipment:Equipment = new Equipment();
 
     updateInventory(inventory:Array<number>){
-        this.inventory = inventory;
+        for(let i = 0; i < inventory.length; i++){
+            let itemActual = inventory[i];
+            this.inventory.push(Item.getItem(itemActual));
+        }
     }
 
     updateEquipment(equipment:Array<number>){
-        this.equipment = equipment;
+        this.equipment.loadEquipment(equipment);
+    }
+
+    getEquipment():Equipment{
+        return this.equipment;
     }
 }
