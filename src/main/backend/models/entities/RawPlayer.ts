@@ -16,4 +16,12 @@ export class RawPlayer extends Entity{
     getName(){
         return this.name;
     }
+
+    getGuid(){
+        return this.guid;
+    }
+
+    setGuid(guid:Guid){
+        this.guid = guid;
+    }
 }

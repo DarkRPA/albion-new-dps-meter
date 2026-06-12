@@ -249,8 +249,9 @@ document.getElementById("btn-copiar").addEventListener("click", ()=>{
 ══════════════════════════════════════════════════════════ */
 async function resetAll() {
 
-
+  let localPlayer = await window.mainApi.getLocalPlayer();
   players = [];
+  setDamage(localPlayer.name, 0);
   let gottenPlayers = await window.mainApi.getPlayers();
   for(let i = 0; i < gottenPlayers.length; i++){
     setDamage(gottenPlayers[i].name, 0);

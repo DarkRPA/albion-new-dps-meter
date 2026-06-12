@@ -14,6 +14,9 @@ import { PartyController } from './PartyController.js'
 import { EntityController } from './EntityController.js'
 import { StatisticController } from './StatisticController.js'
 import { Guid } from '../models/entities/Guid.js'
+import { RawPlayer } from '../models/entities/RawPlayer.js'
+import { ItemEntity } from '../models/entities/ItemEntity.js'
+import { Inventory } from '../models/inventory/Inventory.js'
 
 export const PARTY_CONTROLLER = new PartyController();
 export const ENTITY_CONTROLLER = new EntityController();
@@ -80,6 +83,10 @@ function onLocalPlayerUpdate(context: any): void {
  */
 function enterToParty(parametros: any): void {
   //Jugadores en la party
+  if(!PARTY_CONTROLLER.isInParty){ 
+    if(PARTY_CONTROLLER.membersInParty.length > 0) PARTY_CONTROLLER.membersInParty = [];
+    PARTY_CONTROLLER.isInParty = true;
+  }
   let playersInParty = parametros.get(6)
   let playersGuid = parametros.get(5)
   //Anteriormente los GUID los daban en un array y cada posicion del array era un sub array de 16 bytes
@@ -97,65 +104,21 @@ function enterToParty(parametros: any): void {
 
   //Iteramos cada jugador en la party
   for (let i = 0; i < playersInParty.length; i++) {
-    let p = playersInParty[i]
-    if (findByName(p)) continue
+    if (PARTY_CONTROLLER.isPlayerInParty(split[i])) continue
     let nP = split[i]
 
-    let player = new Player(p)
-
-    player.guid = nP
-    NetworkListerner.playerList.push(player)
+    let player = new Player(0, "", playersInParty[i], nP);
+    PARTY_CONTROLLER.addPlayerToParty(player);
     ViewController.instance.sendPlayerAdded(player);
   }
 }
 
 /**
- * Funcion encargada de buscar un usuario en concreto por ID o por nombre,
- * este metodo solo busca a usuarios que se consideran de relevancia.
- * @param value El ID o nombre del usuario que se va a buscar
- * @param byName Si en este caso se va a buscar por nombre en vez de por ID
- * @returns Una entidad Player o indefinido si no se ha encontrado nada.
- */
-export function findByName(value: string | number, byName = true): Player | undefined {
-  //Devolvemos el usuario local
-  let pList = NetworkListerner.playerList
-  for (let i = 0; i < pList.length; i++) {
-    if (byName) {
-      if (pList[i]!.name == value) {
-        return pList[i]
-      }
-    } else {
-      if(NetworkListerner.foundPlayers[pList[i].name]){
-        //Somehow the player got its id messed up by a lot
-        let idFromFound = NetworkListerner.foundPlayers[pList[i].name][0];
-        if(idFromFound == value){
-          return pList[i];
-        }
-      }
-    }
-  }
-  return undefined;
-}
-
-//TODO: Migrar la logica a diferentes controladores
-/**
- * Calcula la fama por hora
- * @returns La fama por hora
- */
-export function getFamePerHour() {
-  let momentoActual = performance.now()
-  let diff = (momentoActual - Main.StartingTime) / 1000
-  let famePerHour = (NetworkListerner.totalFame / diff) * 3600
-  return famePerHour
-}
-/**
  * Reinicializa todas las variables a 0
  */
 export function reloadEverything(){
-    NetworkListerner.totalFame = 0;
-    for(let i = 0; i < NetworkListerner.playerList.length; i++){
-        NetworkListerner.playerList[i].restartDmg();
-    }
+    STATISTIC_CONTROLLER.totalFame = 0;
+    PARTY_CONTROLLER.restartDamage();
 }
 
 /**
@@ -192,10 +155,11 @@ function route(contexto: any) {
       break
     case 90:
       //Se ha cambiado el equipamiento
-      let player:Player|undefined = findById(params.get(0));
-      if(!player) return;
+      let players:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerById(params.get(0));
+      if(players.length == 0) return;
+      let player = players[0];
 
-      player.equipmentChanged(params.get(2));
+      player.inventory.updateEquipment(params.get(2));
     case 6:
       //Golpea enemigo
       let causante = params.get(6);
@@ -216,61 +180,21 @@ function route(contexto: any) {
       //console.log()
       break
     case 29:
-      NetworkListerner.foundPlayers[params.get(1)] =  [params.get(0),  params.get(40)];
-      let p = findByName(params.get(1));
-      if(!p) return;
-      p.equipmentChanged(NetworkListerner.foundPlayers[params.get(1)][1]);
-      break
+      let rawPlayer:RawPlayer = new RawPlayer(params.get(0), "", params.get(1), Guid.PLACEHOLDER_GUID);
+      rawPlayer.inventory.updateEquipment(params.get(40));
+      ENTITY_CONTROLLER.addRawPlayer(rawPlayer);
+      break;
+    // case 29:
+    //   NetworkListerner.foundPlayers[params.get(1)] =  [params.get(0),  params.get(40)];
+    //   let p = findByName(params.get(1));
+    //   if(!p) return;
+    //   p.equipmentChanged(NetworkListerner.foundPlayers[params.get(1)][1]);
+    //   break
     case 30:
-      NetworkListerner.equipmentItems[params.get(0)] = params.get(1);
+      let itemEntity:ItemEntity = new ItemEntity(params.get(0), "", params.get(1));
+      ENTITY_CONTROLLER.addItemEntity(itemEntity);
       break;
   }
-}
-
-//TODO: Refactorizar esta funcion, sabemos que los numeros raros son el GUID
-function findByNumerosRaros(numeros: Array<number>) {
-  for (let i = 0; i < NetworkListerner.playerList.length; i++) {
-    let playerNums = NetworkListerner.playerList[i]
-
-    if (checkNumbers(playerNums!, numeros)) {
-      return playerNums
-    }
-  }
-  return undefined
-}
-
-/**
- * Funcion encargada de comprobar si un GUID proporcionado corresponde a un usuario en concreto
- * @param player La entidad del jugador
- * @param numeros Su GUID
- * @returns bool Dependiendo si el GUID del jugador proporcionado es igual que el GUID proporcionado    
- */
-function checkNumbers(player: Player, numeros: Array<number>) {
-  if (!player) return false
-  let playerNums = player.guid
-  let found = true
-  for (let x = 0; x < playerNums.length; x++) {
-    if (numeros[x] != playerNums[x]) {
-      found = false
-      break
-    }
-  }
-  return found
-}
-
-/**
- * Funcion encargada de iterar el array de usuario no relevantes y comprobar si el nombre está presente
- * en caso de que lo esté, lo devuelve
- * @param name Nombre del usuario
- * @returns number El ID del usuario en el mapa
- */
-function getIndexFromName(name: string): number {
-  for (let i = 0; i < NetworkListerner.playerList.length; i++) {
-    let p = NetworkListerner.playerList[i]
-    if (p!.name == name) return i
-  }
-
-  return -1
 }
 
 /**
@@ -279,11 +203,18 @@ function getIndexFromName(name: string): number {
  */
 function playerJoinParty(parametros: any): void {
   let name = parametros.get(2)
-  let guid = parametros.get(1)
+  let guid:Guid = new Guid(parametros.get(1))
+  let players:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerByName(name);
+  let player;
 
-  let player = new Player(name, guid)
+  if(players.length > 0){
+    let rawP:RawPlayer = players[0];
+    player = new Player(rawP.getWorldId(), rawP.getWorldMap(), name, guid);
+  }else{
+    player = new Player(0, "", name, guid);
+  }
 
-  NetworkListerner.playerList.push(player)
+  PARTY_CONTROLLER.addPlayerToParty(player);
   ViewController.instance.sendPlayerAdded(player);
 }
 
@@ -293,18 +224,18 @@ function playerJoinParty(parametros: any): void {
  */
 function leaveParty(parametros: any): void {
   let guid = parametros.get(1)
-  let p = findByNumerosRaros(guid)
+  let p:Player|undefined = PARTY_CONTROLLER.getPlayerFromGuid(guid);
 
   if (p == undefined) {
-    console.log(guid, NetworkListerner.playerList);
+    console.log(guid, PARTY_CONTROLLER.membersInParty);
     return;
   }
+
   if (p.isLocalPlayer) {
-    NetworkListerner.playerList = [NetworkListerner.playerList[0]];
+    PARTY_CONTROLLER.localPlayerLeftParty();
     ViewController.instance.sendLocalPlayerLeft();
   } else {
-    let indexP = getIndexFromName(p.name)
-    NetworkListerner.playerList.splice(indexP, 1)
+    PARTY_CONTROLLER.removePlayerFromParty(guid);
     ViewController.instance.sendPlayerRemoved(p);
   }
 }
@@ -317,8 +248,9 @@ function leaveParty(parametros: any): void {
  */
 function hitEnemy(causante:number, damage:number): void {
   if(NetworkListerner.paused) return;
-  let player = findById(causante)
-  if (!player) {return}
+  let players:Array<Player> = PARTY_CONTROLLER.getPartyMemberfromID(causante);
+  if (players.length <= 0) {return}
+  let player = players[0];
 
   let paquete = new DamagePacket(damage)
   player.addPacket(paquete)
@@ -326,22 +258,6 @@ function hitEnemy(causante:number, damage:number): void {
   //player.addDamage(damage*-1);
 }
 
-function findById(id: number) {
-  return findByName(id, false)
-}
-
-function findItemByWorldID(id:number){
-  return NetworkListerner.equipmentItems[id] || 0;
-}
-
-function convertWorldIdInvetory(inventory:Array<number>):Array<number>{
-  let result:Array<number> = [];
-  for(let i = 0; i < inventory.length; i++){
-    result[i] = findItemByWorldID(inventory[i]);
-  }
-
-  return result;
-}
 
 function obtainFame(parametros: any): void {
   let cantBase = Number(parametros.get(2)) / 10000
@@ -349,35 +265,37 @@ function obtainFame(parametros: any): void {
 
   let calcPremium = premium ? cantBase * 1.5 : cantBase
 
-  NetworkListerner.totalFame += calcPremium
+  STATISTIC_CONTROLLER.addFame(calcPremium);
 }
 
 function onMapChange(params: any) {
-  let playerList = NetworkListerner.playerList
   if (Main.StartingTime == -1) Main.StartingTime = performance.now()
   let instance:ViewController = ViewController.instance;
   //NetworkListerner.foundPlayers = [];
 
-  if (playerList[0] == undefined) {
-    playerList[0] = new Player(params.get(2));
-    playerList[0].isLocalPlayer = true
-    playerList[0].guid = params.get(5);
-    instance.sendPlayerAdded(playerList[0]);
+  let localPlayer:Player;
+
+  if (ENTITY_CONTROLLER.localPlayer == undefined) {
+    localPlayer = new Player(params.get(0), "", params.get(2), params.get(5));
+    localPlayer.isLocalPlayer = true;
+    ENTITY_CONTROLLER.loadLocalPlayer(localPlayer);
+
+    instance.sendPlayerAdded(localPlayer);
   } else {
-    playerList[0].guid = params.get(1);
+    ENTITY_CONTROLLER.localPlayer.setWorldId(params.get(0));
+    localPlayer = ENTITY_CONTROLLER.localPlayer;
   }
-  let inventory = params.get(52);
-  
-  NetworkListerner.foundPlayers[params.get(2)] = [params.get(0), convertWorldIdInvetory(inventory)];
-  let player:Player|undefined = findById(params.get(0));
+  let equipment = params.get(52);
+  let cast:Array<ItemEntity> = [];
+  for(let i = 0; i < equipment.length; i++){
+    let itemEntity:Array<ItemEntity> = ENTITY_CONTROLLER.getEquipmentById(equipment[i]);
+    if(itemEntity.length == 0) continue;
+    cast.push(itemEntity[0]);
+  }
+
+  let convertedEquipment = Inventory.convertWorldIDInventoryToInventory(cast);
+  ENTITY_CONTROLLER.addRawPlayer(localPlayer);
+  localPlayer.inventory.updateEquipment(convertedEquipment);
+
   instance.sendMapChanged();
-
-  if(!player) return;
-
-  player.equipmentChanged(NetworkListerner.foundPlayers[params.get(2)][1]);
-
-  //for(let i = 0; i < playerList.length; i++){
-  //    let p = playerList[i];
-  //    p.restartDmg();
-  //}
 }

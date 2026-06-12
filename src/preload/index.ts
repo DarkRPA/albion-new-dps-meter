@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('mainApi', {
     ipcRenderer.on("localplayer-leave", (_event, data)=> callback(data));
   },
   getPlayers: () => ipcRenderer.invoke("get-players"),
+  getLocalPlayer: () => ipcRenderer.invoke("get-localplayer"),
   sendReset: () => ipcRenderer.send("reset"),
   sendPause: () => ipcRenderer.send("pause"),
   sendUnpause: () => ipcRenderer.send("unpause"),

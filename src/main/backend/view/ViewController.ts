@@ -6,7 +6,7 @@
 
 import { BrowserWindow, ipcMain } from "electron";
 import path from "path";
-import { findByName, NetworkListerner, reloadEverything } from "../controllers/NetworkListener";
+import { ENTITY_CONTROLLER, NetworkListerner, PARTY_CONTROLLER, reloadEverything, STATISTIC_CONTROLLER } from "../controllers/NetworkListener";
 import { Player } from "../models/entities/Player";
 import { version } from "../../../../package.json";
 
@@ -37,11 +37,11 @@ export class ViewController{
     }
 
     sendPlayerAdded(player:Player){
-      this.baseWindow.webContents.send("player-added", player.name);
+      this.baseWindow.webContents.send("player-added", player.getName());
     }
 
     sendPlayerRemoved(player:Player){
-      this.baseWindow.webContents.send("player-removed", player.name);
+      this.baseWindow.webContents.send("player-removed", player.getName());
     }
 
     sendLocalPlayerLeft(){
@@ -50,27 +50,32 @@ export class ViewController{
 
     initalizeEvents(){
       ipcMain.handle("get-fame", ()=>{
-        return NetworkListerner.totalFame;
+        return STATISTIC_CONTROLLER.totalFame;
       });
 
       ipcMain.handle("get-damage", (_event, name:string)=>{
-        const player:Player|undefined = findByName(name);
-        if(!player) return undefined;
+        let partyPlayer:Array<Player> = PARTY_CONTROLLER.getPartyMemberFromName(name);
+        if(partyPlayer.length <= 0) return undefined;
+        const player:Player|undefined = partyPlayer[0];
 
         let result:any = {
           damage: player.getTotalDamage(),
           healing: player.getTotalHealing(),
           hps: Number.isNaN(player.getTotalHPS())?0:player.getTotalHPS(),
           dps: Number.isNaN(player.getTotalDPS())?0:player.getTotalDPS(),
-          idFound: NetworkListerner.playerHasId(name),
-          weaponImage: player.getWeaponImage()
+          idFound: ENTITY_CONTROLLER.getRawPlayerByName(player.getName())[0] || undefined,
+          weaponImage: player.inventory.getEquipment().mainWeapon?.getRenderUrl() || "https://render.albiononline.com/v1/item/T3_MAIN_AXE.png",
         }
 
         return result;
       });
 
       ipcMain.handle("get-players", (_event)=>{
-        return NetworkListerner.playerList;
+        return PARTY_CONTROLLER.membersInParty;
+      })
+
+      ipcMain.handle("get-localplayer", (_event)=>{
+        return ENTITY_CONTROLLER.localPlayer;
       })
 
       ipcMain.on("pause", ()=>{

@@ -34,7 +34,7 @@ export class Item{
     }
 
     private static loadInformation(itemName:string){
-        let regex = /(T[0-8])_(HEAD|BAG|CAPEITEM|POTION|OFF|MEAL|SHOES|ARMOR|MOUNT|MAIN|2H)_(\D[^@]+)?(@?(\d))?_?(\D*)/gm;
+        let regex = /(T[0-8])_(HEAD|BAG|CAPEITEM|POTION|OFF|MEAL|SHOES|ARMOR|MOUNT|MAIN|2H)_?(\D[^@]+)?(@?(\d))?_?(\D*)/gm;
         let groups = regex.exec(itemName);
         let data = {
             name: "",
@@ -97,11 +97,13 @@ export class Item{
     public static getItem(id:number):Item{
         let item = ITEMS[id-1];
         
-        if(!item){
-            return new Item(id, 0, 0, 999, "", "");
-        }
+        
         let uniqueName = item["UniqueName"];
         let itemData = Item.loadInformation(uniqueName)!
+
+        if(!itemData){
+            return new Item(id, 0, 0, 999, uniqueName, "");
+        }
 
         let newItem:Item = new Item(id, itemData.tier, itemData.enchantment, itemData.itemType, uniqueName, item["LocalizedNames"]["ES-ES"]);
         newItem.renderUrl = `https://render.albiononline.com/v1/item/${uniqueName}.png`;

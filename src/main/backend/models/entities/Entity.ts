@@ -18,4 +18,12 @@ export abstract class Entity{
     getWorldId(){
         return this.worldId;
     }
+
+    getWorldMap(){
+        return this.map;
+    }
+
+    setWorldId(id:number){
+        this.worldId = id;
+    }
 }

@@ -70,7 +70,7 @@ export class EntityController{
      * @returns Una lista con todas las coincidencias, puede estar vacia
      */
     public getRawPlayerById(id:number):Array<RawPlayer>{
-        return this.playerEntityList.filter((p)=>{p.isWorldId(id)});
+        return this.playerEntityList.filter((p)=>p.isWorldId(id));
     }
     /**
      * Dado un ID itera la lista de usuario no relevantes hasta encontrar con el correcto, si no hay ninguno
@@ -79,11 +79,11 @@ export class EntityController{
      * @returns Una lista con todas las coincidencias, puede estar vacia
      */
     public getRawPlayerByName(name:String):Array<RawPlayer>{
-        return this.playerEntityList.filter((p)=>{p.getName() == name});
+        return this.playerEntityList.filter((p)=>p.getName() == name);
     }
 
     public getEquipmentById(id:number):Array<ItemEntity>{
-        return this.equipmentEntityList.filter((p)=>{p.isWorldId(id)});
+        return this.equipmentEntityList.filter((p)=>p.isWorldId(id));
     }
 
     public reset(){

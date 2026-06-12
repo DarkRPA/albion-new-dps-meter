@@ -1,3 +1,4 @@
+import { ItemEntity } from "../entities/ItemEntity";
 import { Equipment } from "./Equipment";
 import { Item } from "./Item";
 
@@ -18,5 +19,13 @@ export class Inventory{
 
     getEquipment():Equipment{
         return this.equipment;
+    }
+
+    static convertWorldIDInventoryToInventory(inventory:Array<ItemEntity>){
+        let result:Array<number> = [];
+        for(let i = 0; i < inventory.length; i++){
+            result.push(inventory[i].itemId);
+        }
+        return result;
     }
 }
