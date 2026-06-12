@@ -239,7 +239,9 @@ function leaveParty(parametros: any): void {
     PARTY_CONTROLLER.localPlayerLeftParty();
     ViewController.instance.sendLocalPlayerLeft();
   } else {
-    PARTY_CONTROLLER.removePlayerFromParty(guid);
+    let player:Player|undefined = PARTY_CONTROLLER.getPlayerFromGuid(new Guid(guid));
+    if(!player) return;
+    PARTY_CONTROLLER.removePlayerFromParty(player);
     ViewController.instance.sendPlayerRemoved(p);
   }
 }
