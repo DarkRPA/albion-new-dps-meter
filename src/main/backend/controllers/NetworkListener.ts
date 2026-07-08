@@ -83,12 +83,12 @@ function onLocalPlayerUpdate(context: any): void {
  */
 function enterToParty(parametros: any): void {
   //Jugadores en la party
-  if(!PARTY_CONTROLLER.isInParty){ 
+  if(!PARTY_CONTROLLER.isInParty){
     if(PARTY_CONTROLLER.membersInParty.length > 0) PARTY_CONTROLLER.membersInParty = [];
     PARTY_CONTROLLER.isInParty = true;
   }
-  let playersInParty = parametros.get(6)
-  let playersGuid = parametros.get(5)
+  let playersInParty = parametros.get(9)
+  let playersGuid = parametros.get(8)
   //Anteriormente los GUID los daban en un array y cada posicion del array era un sub array de 16 bytes
   //cada subarray era un GUID, ahora no se divide en sub arrays por lo que hay que separarlos manualmente
   let split:Array<Guid> = [];
