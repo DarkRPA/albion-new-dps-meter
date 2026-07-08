@@ -81,17 +81,18 @@ function playerByName(name){
   return -1;
 }
 
-function setDamage(name, dmg, healing, idFound) {
+function setDamage(name, dmg, healing, idFound, weaponImage) {
     //if (!mapLoaded || paused) return;
     let pFound = playerByName(name);
     if(pFound == -1) {
-      players.push({ name, dmg: 0, isHealer: false, dps: 0, idFound: false });
+      players.push({ name, dmg: 0, isHealer: false, dps: 0, idFound: false , weaponImage: ""});
       pFound = players.length-1;
     }
     players[pFound].dmg = dmg;
     players[pFound].idFound = idFound;
     players[pFound].healing = Math.abs(healing);
     players[pFound].isHealer = false;
+    players[pFound].weaponImage = weaponImage;
     //render();
   };
 function setFame(amount) {
@@ -152,7 +153,7 @@ async function render() {
       removePlayer(p.name);
       continue;
     }
-    setDamage(p.name, dmg.damage, dmg.healing, dmg.idFound);
+    setDamage(p.name, dmg.damage, dmg.healing, dmg.idFound, dmg.weaponImage);
   }
 
   document.getElementById('el-timer').textContent = fmtTime(ms)
@@ -200,7 +201,7 @@ async function render() {
       // Group contribution percentage
       const groupPct = ((p.dmg / totalGroupDmg) * 100).toFixed(1)
 
-      let rankLabel = '✚',
+      let rankLabel = `<img src="${p.weaponImage}" class="rank-icon" alt="icon" />`,
         rankCls = ''
       if (!p.isHealer) {
         rankDps++
@@ -248,8 +249,9 @@ document.getElementById("btn-copiar").addEventListener("click", ()=>{
 ══════════════════════════════════════════════════════════ */
 async function resetAll() {
 
-
+  let localPlayer = await window.mainApi.getLocalPlayer();
   players = [];
+  setDamage(localPlayer.name, 0);
   let gottenPlayers = await window.mainApi.getPlayers();
   for(let i = 0; i < gottenPlayers.length; i++){
     setDamage(gottenPlayers[i].name, 0);

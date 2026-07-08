@@ -6,18 +6,39 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { App } from 'ao-network-revitalized/index.js'
-import { Player } from '../models/Player.js'
-import { DamagePacket } from '../models/DamagePacket.js'
+import { Player } from '../models/entities/Player.js'
+import { DamagePacket } from '../models/damage/DamagePacket.js'
 import { Main } from '../../index.js'
 import { ViewController } from '../view/ViewController.js'
+import { PartyController } from './PartyController.js'
+import { EntityController } from './EntityController.js'
+import { StatisticController } from './StatisticController.js'
+import { Guid } from '../models/entities/Guid.js'
+import { RawPlayer } from '../models/entities/RawPlayer.js'
+import { ItemEntity } from '../models/entities/ItemEntity.js'
+import { Inventory } from '../models/inventory/Inventory.js'
 
+export const PARTY_CONTROLLER = new PartyController();
+export const ENTITY_CONTROLLER = new EntityController();
+export const STATISTIC_CONTROLLER = new StatisticController();
+
+/**
+ * Clase NetworkListener, se encarga de inicializar el servicio de escucha del paquete ao-network-revitalized
+ * y maneja los eventos que vamos recibiendo por parte de Albion Online
+ */
 export class NetworkListerner {
-  private networkInstance: App | undefined
-  static playerList: Array<Player> = []
-  static totalFame: number = 0
+  //La instancia de la ao-network
+  private networkInstance: App | undefined;
+  //Una lista de todos los usuarios core de la aplicacion, por ejemplo, usuarios de la party
+  //Fama total
+  //Pausado
   static paused:boolean = false;
-  static foundPlayers:Array<number> = [];
+  //Lista de los jugadores no importantes, esta lista se utiliza primordialmente para registrar todos los usuarios
+  //que no están en la party y que por consecuencia no son relevantes, solo se guardan sus id's en el mundo, su nombre
+  //y su inventario.
+  //Lo mismo que foundPlayers pero para objetos
 
+  //Punto de entrada del programa.
   public init(): void {
     if (this.networkInstance == undefined) {
       this.networkInstance = new App(false)
@@ -25,23 +46,30 @@ export class NetworkListerner {
     }
   }
 
+  /**
+   * Inicializador de los listeners de eventos
+   */
   private startEventListeners(): void {
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.Event, route);
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.OperationResponse, onLocalPlayerUpdate)
     this.networkInstance!.on(this.networkInstance!.AODecoder.messageType.OperationRequest, onLocalPlayerUpdate)
   }
-
-  public static playerHasId(name:string){
-    return (NetworkListerner.foundPlayers[name] != undefined);
-  }
 }
 
+/**
+ * Funcion encargada de actualizar el estado del jugador local, primordialmente utilizado para
+ * los cambios de mapa.
+ * @param context El contexto obtenido por ao-network
+ */
 function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
     let code = params.get(253);
+    //console.log(params);
     switch (code) {
       case 2:
+        //TODO: Sacar y registrar más información como por ejemplo el mapa al que ha zoneado.
+        //El mapa es el parametro(8)
         onMapChange(params)
         break
     }
@@ -49,96 +77,60 @@ function onLocalPlayerUpdate(context: any): void {
 }
 
 
+/**
+ * Funcion encargada de controlar el evento de ingreso a una party
+ * @param parametros Los parametros obtenidos desde ao-network
+ */
 function enterToParty(parametros: any): void {
-  let playersInParty = parametros.get(6)
-  let playersPeroNumerosRaros = parametros.get(5)
+  //Jugadores en la party
+  if(!PARTY_CONTROLLER.isInParty){
+    if(PARTY_CONTROLLER.membersInParty.length > 0) PARTY_CONTROLLER.membersInParty = [];
+    PARTY_CONTROLLER.isInParty = true;
+  }
+  let playersInParty = parametros.get(9)
+  let playersGuid = parametros.get(8)
+  //Anteriormente los GUID los daban en un array y cada posicion del array era un sub array de 16 bytes
+  //cada subarray era un GUID, ahora no se divide en sub arrays por lo que hay que separarlos manualmente
+  let split:Array<Guid> = [];
 
+  //Separamos los GUID's de forma manual saltando de 16 bytes en 16 bytes
+  for(let i = 0; i < playersGuid.length; i += 16){
+    let fixedGuid:Array<number> = [];
+    for(let x = i; x < (i + 16) ; x++){
+      fixedGuid.push(playersGuid[x]);
+    }
+    split.push(new Guid(fixedGuid));
+  }
+
+  //Iteramos cada jugador en la party
   for (let i = 0; i < playersInParty.length; i++) {
-    let p = playersInParty[i]
-    if (findByName(p)) continue
-    let nP = playersPeroNumerosRaros[i]
+    if (PARTY_CONTROLLER.isPlayerInParty(split[i])) continue
+    let nP = split[i]
 
-    let player = new Player(p)
-
-    player.guid = nP
-    NetworkListerner.playerList.push(player)
+    let player = new Player(0, "", playersInParty[i], nP);
+    PARTY_CONTROLLER.addPlayerToParty(player);
     ViewController.instance.sendPlayerAdded(player);
   }
 }
 
-export function findByName(value: string | number, byName = true): Player | undefined {
-  //Devolvemos el usuario local
-  let pList = NetworkListerner.playerList
-  for (let i = 0; i < pList.length; i++) {
-    if (byName) {
-      if (pList[i]!.name == value) {
-        return pList[i]
-      }
-    } else {
-      if(NetworkListerner.foundPlayers[pList[i].name]){
-        //Somehow the player got its id messed up by a lot
-        let idFromFound = NetworkListerner.foundPlayers[pList[i].name];
-        if(idFromFound == value){
-          return pList[i];
-        }
-      }
-    }
-  }
-  return undefined;
-}
-
-// function formatNumber(num: number): string {
-//   let result = ''
-//   let numCalc = 0
-//   if (num >= 10e2 && num < 1 * 10e5) {
-//     numCalc = Math.round((num / 10e2) * 100) / 100
-//     result = `${numCalc}k`
-//   } else if (num >= 10e5) {
-//     numCalc = Math.round((num / 10e5) * 100) / 100
-//     result = `${numCalc}m`
-//   } else {
-//     result = '' + Math.round(num)
-//   }
-
-//   return result
-// }
-
-export function getFamePerHour() {
-  let momentoActual = performance.now()
-  let diff = (momentoActual - Main.StartingTime) / 1000
-  let famePerHour = (NetworkListerner.totalFame / diff) * 3600
-  return famePerHour
-}
-
-// //function copyToClipboard(){
-//     let playerData = getPlayerData();
-
-//     let resultTest = "Player;Damage;DPS";
-
-//     for(let i = 0; i < playerData.length; i++){
-//         let p = playerData[i];
-//         let s = `\n${p[0]};${p[1]};${p[2]}`;
-//         resultTest += s;
-//     }
-
-//     try{
-//         copy(resultTest);
-//     }catch(err){}
-// }
-
+/**
+ * Reinicializa todas las variables a 0
+ */
 export function reloadEverything(){
-    NetworkListerner.totalFame = 0;
-    for(let i = 0; i < NetworkListerner.playerList.length; i++){
-        NetworkListerner.playerList[i].restartDmg();
-    }
+    STATISTIC_CONTROLLER.totalFame = 0;
+    PARTY_CONTROLLER.restartDamage();
 }
 
+/**
+ * Funcion route, recibe los paquetes de ao-network y dependiendo de su codigo de evento
+ * los redirige a un lado u a otro.
+ * @param contexto El contexto recibido por ao-network
+ * @returns void
+ */
 function route(contexto: any) {
   let params = contexto.parameters
 
   if (contexto.code == 3) return
-
-  //console.log(contexto.parameters.get(252), contexto);
 
   switch (contexto.parameters.get(252)) {
     case 231:
@@ -159,8 +151,16 @@ function route(contexto: any) {
     case 235:
       //->
       //Sale player
+      console.log(235, params);
       leaveParty(params)
       break
+    case 90:
+      //Se ha cambiado el equipamiento
+      let players:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerById(params.get(0));
+      if(players.length == 0) return;
+      let player = players[0];
+
+      player.inventory.updateEquipment(params.get(2));
     case 6:
       //Golpea enemigo
       let causante = params.get(6);
@@ -172,7 +172,6 @@ function route(contexto: any) {
       let causantes:Array<number> = params.get(6);
       for(let i = 0; i < causantes.length; i++){
         hitEnemy(causantes[i], params.get(2)[i]);
-
       }
       break
     case 82:
@@ -181,76 +180,100 @@ function route(contexto: any) {
       //console.log()
       break
     case 29:
-      NetworkListerner.foundPlayers[params.get(1)] = params.get(0);
-      break
+      let rawPlayer:RawPlayer = new RawPlayer(params.get(0), ENTITY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1), Guid.PLACEHOLDER_GUID);
+      rawPlayer.inventory.updateEquipment(params.get(40));
+      ENTITY_CONTROLLER.addRawPlayer(rawPlayer);
+
+      PARTY_CONTROLLER.updatePlayerFromRawData(rawPlayer);
+
+      break;
+    // case 29:
+    //   NetworkListerner.foundPlayers[params.get(1)] =  [params.get(0),  params.get(40)];
+    //   let p = findByName(params.get(1));
+    //   if(!p) return;
+    //   p.equipmentChanged(NetworkListerner.foundPlayers[params.get(1)][1]);
+    //   break
+    case 30:
+      let itemEntity:ItemEntity = new ItemEntity(params.get(0), ENTITY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1));
+      ENTITY_CONTROLLER.addItemEntity(itemEntity);
+      break;
   }
 }
 
-function findByNumerosRaros(numeros: Array<number>) {
-  for (let i = 0; i < NetworkListerner.playerList.length; i++) {
-    let playerNums = NetworkListerner.playerList[i]
-
-    if (checkNumbers(playerNums!, numeros)) {
-      return playerNums
-    }
-  }
-  return undefined
-}
-
-function checkNumbers(player: Player, numeros: Array<number>) {
-  if (!player) return false
-  let playerNums = player.guid
-  let found = true
-  for (let x = 0; x < playerNums.length; x++) {
-    if (numeros[x] != playerNums[x]) {
-      found = false
-      break
-    }
-  }
-  return found
-}
-
-function getIndexFromName(name: string): number {
-  for (let i = 0; i < NetworkListerner.playerList.length; i++) {
-    let p = NetworkListerner.playerList[i]
-    if (p!.name == name) return i
-  }
-
-  return -1
-}
-
+/**
+ * Funcion encargada de gestionar el evento de entrada de un usuario a la party del usuario local
+ * @param parametros Los parametros de ao-network
+ */
 function playerJoinParty(parametros: any): void {
   let name = parametros.get(2)
-  let guid = parametros.get(1)
+  let guid:Guid = new Guid(parametros.get(1))
+  let players:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerByName(name);
+  let player:Player;
 
-  let player = new Player(name, guid)
+  if(players.length > 0){
+    let rawP:RawPlayer = players[0];
+    player = new Player(rawP.getWorldId(), rawP.getWorldMap(), name, guid);
+    player.inventory.setEquipment(rawP.inventory.getEquipment());
+  }else{
+    player = new Player(0, "", name, guid);
+  }
 
-  NetworkListerner.playerList.push(player)
+  PARTY_CONTROLLER.addPlayerToParty(player);
   ViewController.instance.sendPlayerAdded(player);
 }
 
+/**
+ * Funcion encargada de gestionar el evento de salida de un usuario a la party del usuario local o el mismo usuario local
+ * @param parametros Los parametros de ao-network
+ */
 function leaveParty(parametros: any): void {
   let guid = parametros.get(1)
-  let p = findByNumerosRaros(guid)
+  let p:Player|undefined = PARTY_CONTROLLER.getPlayerFromGuid(new Guid(guid));
 
   if (p == undefined) {
-    console.log(guid, NetworkListerner.playerList);
+    console.log(guid, PARTY_CONTROLLER.membersInParty);
     return;
   }
+
   if (p.isLocalPlayer) {
-    NetworkListerner.playerList = [NetworkListerner.playerList[0]];
+    PARTY_CONTROLLER.localPlayerLeftParty();
     ViewController.instance.sendLocalPlayerLeft();
   } else {
-    let indexP = getIndexFromName(p.name)
-    NetworkListerner.playerList.splice(indexP, 1)
+    let player:Player|undefined = PARTY_CONTROLLER.getPlayerFromGuid(new Guid(guid));
+    if(!player) return;
+    PARTY_CONTROLLER.removePlayerFromParty(player);
     ViewController.instance.sendPlayerRemoved(p);
   }
 }
 
+/**
+ * Funcion encargada de gestionar el evento de golpear a una entidad en el mundo.
+ * @param causante El ID del mundo del causante
+ * @param damage El Daño causado
+ * @returns void
+ */
 function hitEnemy(causante:number, damage:number): void {
   if(NetworkListerner.paused) return;
-  let player = findById(causante)
-  if (!player) {return}
+  let players:Array<Player> = PARTY_CONTROLLER.getPartyMemberfromID(causante);
+  let rawPlayer:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerById(causante);
+  if(rawPlayer.length == 0) return;
+
+  if (players.length <= 0) {
+    //Intentamos encontrar a ver si tenemos su ID en el controlador de entidades
+    let foundPartyPlayer:Array<Player> = PARTY_CONTROLLER.getPartyMemberFromName(rawPlayer[0].getName());
+    if(foundPartyPlayer.length == 0) return;
+    foundPartyPlayer[0].setWorldId(rawPlayer[0].getWorldId());
+
+    hitEnemy(causante, damage);
+    return;
+  }
+
+  let player = players[0];
+
+  // Si por temas de albion el equipamiento del jugador no ha llegado se lo reiniciamos desde los datos que hemos recibido en el paquete 29
+  if(player.inventory.getEquipment().mainWeapon == undefined){
+    player.inventory = rawPlayer[0].inventory;
+  }
 
   let paquete = new DamagePacket(damage)
   player.addPacket(paquete)
@@ -258,9 +281,6 @@ function hitEnemy(causante:number, damage:number): void {
   //player.addDamage(damage*-1);
 }
 
-function findById(id: number) {
-  return findByName(id, false)
-}
 
 function obtainFame(parametros: any): void {
   let cantBase = Number(parametros.get(2)) / 10000
@@ -268,30 +288,38 @@ function obtainFame(parametros: any): void {
 
   let calcPremium = premium ? cantBase * 1.5 : cantBase
 
-  NetworkListerner.totalFame += calcPremium
+  STATISTIC_CONTROLLER.addFame(calcPremium);
 }
 
 function onMapChange(params: any) {
-  let playerList = NetworkListerner.playerList
   if (Main.StartingTime == -1) Main.StartingTime = performance.now()
   let instance:ViewController = ViewController.instance;
   //NetworkListerner.foundPlayers = [];
 
-  if (playerList[0] == undefined) {
-    playerList[0] = new Player(params.get(2));
-    playerList[0].isLocalPlayer = true
-    playerList[0].guid = params.get(5);
-    instance.sendPlayerAdded(playerList[0]);
+  let localPlayer:Player;
+
+  if (ENTITY_CONTROLLER.localPlayer == undefined) {
+    localPlayer = new Player(params.get(0), params.get(8), params.get(2), new Guid(params.get(1)));
+    localPlayer.isLocalPlayer = true;
+    ENTITY_CONTROLLER.loadLocalPlayer(localPlayer);
+
+    instance.sendPlayerAdded(localPlayer);
   } else {
-    playerList[0].guid = params.get(1);
+    ENTITY_CONTROLLER.localPlayer.setWorldId(params.get(0));
+    localPlayer = ENTITY_CONTROLLER.localPlayer;
+    localPlayer.setWorldMap(params.get(8));
+  }
+  let equipment = params.get(52);
+  let cast:Array<ItemEntity> = [];
+  for(let i = 0; i < equipment.length; i++){
+    let itemEntity:Array<ItemEntity> = ENTITY_CONTROLLER.getEquipmentById(equipment[i]);
+    if(itemEntity.length == 0) continue;
+    cast.push(itemEntity[0]);
   }
 
-  NetworkListerner.foundPlayers[params.get(2)] = params.get(0);
+  let convertedEquipment = Inventory.convertWorldIDInventoryToInventory(cast);
+  ENTITY_CONTROLLER.addRawPlayer(localPlayer);
+  localPlayer.inventory.updateEquipment(convertedEquipment);
 
   instance.sendMapChanged();
-
-  //for(let i = 0; i < playerList.length; i++){
-  //    let p = playerList[i];
-  //    p.restartDmg();
-  //}
 }
