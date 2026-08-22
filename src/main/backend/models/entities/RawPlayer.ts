@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { Inventory } from "../inventory/Inventory";
 import { Entity } from "./Entity";
 import { Guid } from "./Guid";

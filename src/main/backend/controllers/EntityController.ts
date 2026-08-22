@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { Entity } from "../models/entities/Entity";
 import { ItemEntity } from "../models/entities/ItemEntity";
 import { Player } from "../models/entities/Player";
@@ -16,6 +17,7 @@ export class EntityController{
      * en un futuro
      * @param player Un usuario no relevante
      */
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     public addRawPlayer(player:RawPlayer){
         this.addEntityToEntityList(this.playerEntityList, player);
     }
@@ -23,6 +25,7 @@ export class EntityController{
      * Añade la entidad de un item de equipamiento a la lista de items de equipamiento.
      * @param item Un item
      */
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     public addItemEntity(item:ItemEntity){
         this.addEntityToEntityList(this.equipmentEntityList, item);
     }
@@ -33,7 +36,7 @@ export class EntityController{
      * @param entity La entidad
      */
     private addEntityToEntityList(entityList:Array<Entity>, entity:Entity){
-        let findingId:number = this.getPositionFromEntityList(this.playerEntityList, entity.getWorldId());
+        const findingId:number = this.getPositionFromEntityList(this.playerEntityList, entity.getWorldId());
         if(findingId != -1){
            entityList[findingId] = entity;
         }else{
@@ -78,7 +81,7 @@ export class EntityController{
      * @param id El id del usuario no relevante
      * @returns Una lista con todas las coincidencias, puede estar vacia
      */
-    public getRawPlayerByName(name:String):Array<RawPlayer>{
+    public getRawPlayerByName(name:string):Array<RawPlayer>{
         return this.playerEntityList.filter((p)=>p.getName() == name);
     }
 

@@ -161,6 +161,7 @@ function route(contexto: any) {
       let player = players[0];
 
       player.inventory.updateEquipment(params.get(2));
+      break;
     case 6:
       //Golpea enemigo
       let causante = params.get(6);
