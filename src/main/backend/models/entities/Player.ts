@@ -8,10 +8,11 @@ import { Shard } from '../damage/Shard.js'
 import { DamagePacket } from '../damage/DamagePacket.js'
 import { RawPlayer } from './RawPlayer.js';
 import { Guid } from './Guid.js';
+import { Clonable } from '../Clonable.js';
 
 export const GLOBAL_PULL_TIME = 6;
 
-export class Player extends RawPlayer{
+export class Player extends RawPlayer implements Clonable<Player>{
   shardList: Array<Shard> = [];
   activeShard: Shard | null = null;
   averageTimeBetweenPulls: number = 6;
@@ -21,6 +22,20 @@ export class Player extends RawPlayer{
     super(worldId, map, name, guid);
     //this.id = Math.floor((Math.random()*10))
     //this.startTest();
+  }
+  clone(): Player {
+    let p = new Player(this.worldId, this.map, this.name, this.guid);
+    for(let i in this.shardList){
+      p.shardList.push(this.shardList[i].clone());
+    }
+    if(this.activeShard != null){
+      p.activeShard = this.activeShard;
+    }
+
+    p.averageTimeBetweenPulls = this.averageTimeBetweenPulls;
+    p.isLocalPlayer = this.isLocalPlayer;
+
+    return p;
   }
 
   private addRandomPacket() {

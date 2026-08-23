@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
+import { Clonable } from "../Clonable";
 import { Inventory } from "../inventory/Inventory";
 import { Entity } from "./Entity";
 import { Guid } from "./Guid";
 
-export class RawPlayer extends Entity{
+export class RawPlayer extends Entity implements Clonable<RawPlayer>{
     protected name:string = "";
     protected guid:Guid = Guid.PLACEHOLDER_GUID;
     public inventory:Inventory = new Inventory();
@@ -13,6 +14,11 @@ export class RawPlayer extends Entity{
         this.name = name;
         this.guid = guid;
     }
+  clone(): RawPlayer {
+    let p = new RawPlayer(this.worldId, this.map, this.name, this.guid);
+
+    return p;
+  }
 
     getName(){
         return this.name;

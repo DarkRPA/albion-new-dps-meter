@@ -6,7 +6,7 @@
 
 import { BrowserWindow, ipcMain } from "electron";
 import path from "path";
-import { ENTITY_CONTROLLER, NetworkListerner, PARTY_CONTROLLER, reloadEverything, STATISTIC_CONTROLLER } from "../controllers/NetworkListener";
+import { ENTITY_CONTROLLER, NetworkListerner, PARTY_CONTROLLER, reloadEverything, SNAPSHOT_CONTROLLER, STATISTIC_CONTROLLER } from "../controllers/MainController";
 import { Player } from "../models/entities/Player";
 import { version } from "../../../../package.json";
 
@@ -88,6 +88,14 @@ export class ViewController{
 
       ipcMain.on("reset", ()=>{
         reloadEverything();
+      })
+
+      ipcMain.on("boss-mode", (state, data)=>{
+        if(data){
+          SNAPSHOT_CONTROLLER.makeNormalSnapshot();
+        }else{
+          SNAPSHOT_CONTROLLER.makeBossSnapshot();
+        }
       })
     }
 }

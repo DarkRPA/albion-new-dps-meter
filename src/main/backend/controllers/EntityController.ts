@@ -1,4 +1,6 @@
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
+import { Clonable } from "../models/Clonable";
 import { Entity } from "../models/entities/Entity";
 import { ItemEntity } from "../models/entities/ItemEntity";
 import { Player } from "../models/entities/Player";
@@ -7,10 +9,28 @@ import { RawPlayer } from "../models/entities/RawPlayer";
 /**
  * Clase encargada de gestionar eventos relacionados con entidades
  */
-export class EntityController{
+export class EntityController implements Clonable<EntityController>{
+
     public localPlayer:Player|undefined;
     public playerEntityList:Array<RawPlayer> = [];
     public equipmentEntityList:Array<ItemEntity> = [];
+
+    clone(): EntityController {
+      let e = new EntityController();
+      if(this.localPlayer){
+        e.localPlayer = this.localPlayer;
+      }
+
+      for(let i in this.playerEntityList){
+        e.playerEntityList.push(this.playerEntityList[i].clone());
+      }
+
+      for(let i in this.equipmentEntityList){
+        e.equipmentEntityList.push(this.equipmentEntityList[i].clone());
+      }
+
+      return e;
+    }
 
     /**
      * Añade un usuario un relevante al cual vamos a trackear en caso de que entre en la party

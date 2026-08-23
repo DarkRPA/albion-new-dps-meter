@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 /* eslint-disable prefer-const */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -13,6 +14,7 @@ let paused = false
 let pausedAt = 0
 let pausedTotal = 0
 let totalFame = 0
+let bossMode = false
 
 let players = []
 
@@ -65,6 +67,9 @@ function _activateMap(zoneName) {
   document.getElementById('el-dot').classList.remove('off')
   document.getElementById('el-status').textContent = 'Activo'
   document.getElementById('no-map-screen').style.display = 'none'
+
+  if (bossMode) _disableBossMode()
+
   render()
 }
 
@@ -82,7 +87,6 @@ function playerByName(name){
 }
 
 function setDamage(name, dmg, healing, idFound, weaponImage) {
-    //if (!mapLoaded || paused) return;
     let pFound = playerByName(name);
     if(pFound == -1) {
       players.push({ name, dmg: 0, isHealer: false, dps: 0, idFound: false , weaponImage: ""});
@@ -93,8 +97,8 @@ function setDamage(name, dmg, healing, idFound, weaponImage) {
     players[pFound].healing = Math.abs(healing);
     players[pFound].isHealer = false;
     players[pFound].weaponImage = weaponImage;
-    //render();
   };
+
 function setFame(amount) {
   if (mapLoaded && !paused) totalFame = amount;
 };
@@ -133,6 +137,7 @@ function esc(s) {
 }
 
 window.togglePause = togglePause;
+window.toggleBossMode = toggleBossMode;
 
 /* ══════════════════════════════════════════════════════════
    RENDER
@@ -176,8 +181,7 @@ async function render() {
   const healOnly = list.filter((p) => p.isHealer)
   const maxDmg = Math.max(...dpsOnly.map((p) => p.dmg), 1)
   const maxHeal = Math.max(...dpsOnly.map((p) => Math.abs(p.healing)), 1)
-  
-  // Total damage / healing from the group for the percentage calculation
+
   const totalGroupDmg = dpsOnly.reduce((sum, p) => sum + p.dmg, 0) || 1;
   const totalGroupHeal = dpsOnly.reduce((sum, p) => sum + Math.abs(p.healing), 0) || 1;
 
@@ -195,17 +199,15 @@ async function render() {
   const html = list
     .map((p) => {
       const dps = p.dps
-      const pct = ((p.dmg / maxDmg) * 100).toFixed(1);      
-      const pctHealing = ((p.healing / maxHeal) * 100).toFixed(1);      
+      const pct = ((p.dmg / maxDmg) * 100).toFixed(1);
+      const pctHealing = ((p.healing / maxHeal) * 100).toFixed(1);
 
-      // Group contribution percentage
       const groupPct = ((p.dmg / totalGroupDmg) * 100).toFixed(1)
 
       let rankLabel = `<img src="${p.weaponImage}" class="rank-icon" alt="icon" />`,
         rankCls = ''
       if (!p.isHealer) {
         rankDps++
-        //rankLabel = rankDps
         rankCls = rankDps <= 3 ? `r${rankDps}` : ''
       }
 
@@ -232,12 +234,19 @@ async function render() {
   document.getElementById('el-count').textContent = parts.join(' · ')
 }
 
+/* ══════════════════════════════════════════════════════════
+   EVENT LISTENERS
+══════════════════════════════════════════════════════════ */
 document.getElementById("reset-button").addEventListener("click", ()=>{
   resetAll();
 });
 
 document.getElementById("btn-pause").addEventListener("click", ()=>{
   togglePause();
+});
+
+document.getElementById("btn-boss").addEventListener("click", ()=>{
+  toggleBossMode();
 });
 
 document.getElementById("btn-copiar").addEventListener("click", ()=>{
@@ -260,9 +269,9 @@ async function resetAll() {
   t0 = Date.now();
   pausedTotal = 0;
   if (paused) _unpause()
-  
-  window.mainApi.sendReset();
+  if (bossMode) _disableBossMode()
 
+  window.mainApi.sendReset();
 
   render()
 }
@@ -270,6 +279,7 @@ async function resetAll() {
 function togglePause() {
   paused ? _unpause() : _pause()
 }
+
 function _pause() {
   paused = true
   pausedAt = Date.now()
@@ -279,6 +289,7 @@ function _pause() {
   document.getElementById('el-status').textContent = 'Pausado'
   window.mainApi.sendPause();
 }
+
 function _unpause() {
   pausedTotal += Date.now() - pausedAt
   paused = false
@@ -289,11 +300,43 @@ function _unpause() {
   window.mainApi.sendUnpause();
 }
 
+/* ── MODO BOSS ───────────────────────────────────────────── */
+function toggleBossMode() {
+  bossMode ? _disableBossMode() : _enableBossMode()
+}
+
+function _enableBossMode() {
+  bossMode = true
+  const btnBoss = document.getElementById('btn-boss')
+  const bossBanner = document.getElementById('boss-banner')
+
+  if (btnBoss) btnBoss.classList.add('active')
+  if (bossBanner) bossBanner.classList.remove('hidden')
+  document.body.classList.add('boss-mode-active')
+
+  if (window.mainApi && window.mainApi.sendBossMode) {
+    window.mainApi.sendBossMode(true)
+  }
+}
+
+function _disableBossMode() {
+  bossMode = false
+  const btnBoss = document.getElementById('btn-boss')
+  const bossBanner = document.getElementById('boss-banner')
+
+  if (btnBoss) btnBoss.classList.remove('active')
+  if (bossBanner) bossBanner.classList.add('hidden')
+  document.body.classList.remove('boss-mode-active')
+
+  if (window.mainApi && window.mainApi.sendBossMode) {
+    window.mainApi.sendBossMode(false)
+  }
+}
+
 function copyDpsData() {
   const list = Object.values(players);
   if (!list.length) return;
 
-  // Ordenar la lista igual que en el render principal
   list.sort((a, b) => {
     if (a.isHealer !== b.isHealer) return a.isHealer ? 1 : -1;
     return a.isHealer ? a.dmg - b.dmg : b.dmg - a.dmg;
@@ -301,14 +344,12 @@ function copyDpsData() {
 
   const dpsOnly = list.filter((p) => !p.isHealer);
   const healOnly = list.filter((p) => p.isHealer);
-  
+
   const totalGroupDmg = dpsOnly.reduce((sum, p) => sum + p.dmg, 0) || 1;
   const totalGroupHeal = healOnly.reduce((sum, p) => sum + Math.abs(p.dmg), 0) || 1;
 
-  // Cabecera del texto
   let textToCopy = "Player|Daño|DPS|porcentaje\n";
 
-  // Rellenar la información
   for (let i = 0; i < list.length; i++) {
     let p = list[i];
     const groupPct = p.isHealer
@@ -318,7 +359,6 @@ function copyDpsData() {
     textToCopy += `${p.name}|${fmt(p.dmg)}|${fmt(p.dps)}|${groupPct}%\n`;
   }
 
-  // Crear un elemento temporal para copiar al portapapeles de manera segura
   const textArea = document.createElement("textarea");
   textArea.value = textToCopy;
   textArea.style.position = "fixed";
@@ -326,11 +366,10 @@ function copyDpsData() {
   document.body.appendChild(textArea);
   textArea.focus();
   textArea.select();
-  
+
   try {
     document.execCommand('copy');
-    
-    // Feedback visual opcional en el botón
+
     const btn = document.getElementById("btn-copiar");
     const originalText = btn.innerHTML;
     btn.innerHTML = '✔ Copiado';
@@ -338,7 +377,7 @@ function copyDpsData() {
   } catch (err) {
     console.error('Error al copiar: ', err);
   }
-  
+
   document.body.removeChild(textArea);
 }
 
@@ -347,5 +386,4 @@ function copyDpsData() {
 ══════════════════════════════════════════════════════════ */
 setInterval(() => {
   if (mapLoaded && !paused) render()
-  //let players = await window.mainApi.getPlayers();
 }, 1000)

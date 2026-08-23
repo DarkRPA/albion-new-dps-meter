@@ -32,5 +32,6 @@ contextBridge.exposeInMainWorld('mainApi', {
   sendUnpause: () => ipcRenderer.send("unpause"),
   onGetVersion: (callback: (data:any)=>void)=>{
     ipcRenderer.on("version", (_event, data)=>callback(data));
-  }
+  },
+  sendBossMode: (active: boolean) => ipcRenderer.send('boss-mode', active)
 });

@@ -1,11 +1,24 @@
+/* eslint-disable prefer-const */
+import { Clonable } from "../models/Clonable";
 import { Guid } from "../models/entities/Guid";
 import { Player } from "../models/entities/Player";
 import { RawPlayer } from "../models/entities/RawPlayer";
-import { ENTITY_CONTROLLER } from "./NetworkListener";
+import { ENTITY_CONTROLLER } from "./MainController";
 
-export class PartyController{
+export class PartyController implements Clonable<PartyController>{
+
     isInParty:boolean = false;
     membersInParty:Array<Player> = [];
+
+  clone(): PartyController {
+      let p = new PartyController();
+      p.isInParty = this.isInParty;
+      for(let i in this.membersInParty){
+        p.membersInParty.push(this.membersInParty[i].clone());
+      }
+
+      return p;
+    }
 
     public isPlayerInParty(guid:Guid):boolean{
         for(let i = 0; i < this.membersInParty.length; i++){

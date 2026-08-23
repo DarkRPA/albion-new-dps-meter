@@ -3,8 +3,9 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { DamagePacket } from './DamagePacket.js'
 import { GLOBAL_PULL_TIME, Player } from '../entities/Player.js'
+import { Clonable } from '../Clonable.js'
 
-export class Shard {
+export class Shard implements Clonable<Shard> {
   averageTimePerPull: number = 0
   packetList: Array<DamagePacket> = []
   lastPacket: DamagePacket | null = null
@@ -14,8 +15,28 @@ export class Shard {
   shardStart: number = 0
   shardEnd: number = 0
 
-  constructor(player: Player) {
-    this.averageTimePerPull = player.getAverageTimeBetweenPulls()
+  constructor(player: Player|undefined) {
+    this.averageTimePerPull = player!.getAverageTimeBetweenPulls() || 3
+  }
+
+  clone(): Shard {
+    let copy = new Shard(undefined);
+    copy.averageTimePerPull = this.averageTimePerPull;
+    for(let i in this.packetList){
+      copy.packetList.push(this.packetList[i].clone())
+    }
+
+    if(this.lastPacket != null){
+      copy.lastPacket = this.lastPacket.clone();
+    }
+
+    copy.finalDamage = this.finalDamage;
+    copy. finalHealing = this.finalHealing;
+    copy.finalElapsedTime = this.finalElapsedTime;
+    copy.shardStart = this.shardStart;
+    copy.shardEnd = this.shardEnd;
+
+    return copy;
   }
 
   addPacket(paquete: DamagePacket) {
@@ -63,7 +84,7 @@ export class Shard {
       }else if(!heal && !paqueteActual.healing){
         result += paqueteActual?.dmg!
       }
-      
+
     }
 
     if(this.shardEnd){

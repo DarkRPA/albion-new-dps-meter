@@ -1,3 +1,6 @@
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+import { Clonable } from "../Clonable";
 import ITEMS from "./static/items.json";
 
 export enum Type {
@@ -14,7 +17,7 @@ export enum Type {
     UNKNOWN = 999
 }
 
-export class Item{
+export class Item implements Clonable<Item>{
     protected id:number = 0;
     protected tier:number = 0;
     protected enchantment:number = 0;
@@ -31,6 +34,12 @@ export class Item{
         this.uniqueName = uniqueName;
         this.name = name;
         this.type = itemType;
+    }
+    clone(): Item {
+      let c = new Item(this.id, this.tier, this.enchantment, this.type, this.uniqueName, this.name);
+      c.renderUrl = this.renderUrl;
+
+      return c;
     }
 
     private static loadInformation(itemName:string){
@@ -53,7 +62,7 @@ export class Item{
         }else{
             data.name = groups[3];
         }
-        
+
         data.tier = Number(tier);
         if(!groups[5]) data.enchantment = 0;
         else data.enchantment = Number(groups[5]);
@@ -96,8 +105,8 @@ export class Item{
 
     public static getItem(id:number):Item{
         let item = ITEMS[id-1];
-        
-        
+
+
         let uniqueName = item["UniqueName"];
         let itemData = Item.loadInformation(uniqueName)!
 

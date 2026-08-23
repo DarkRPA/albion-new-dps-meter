@@ -17,10 +17,13 @@ import { Guid } from '../models/entities/Guid.js'
 import { RawPlayer } from '../models/entities/RawPlayer.js'
 import { ItemEntity } from '../models/entities/ItemEntity.js'
 import { Inventory } from '../models/inventory/Inventory.js'
+import { SnapshotController } from './SnapshopController.js'
+import { Snapshot } from '../models/Snapshot.js'
 
-export const PARTY_CONTROLLER = new PartyController();
-export const ENTITY_CONTROLLER = new EntityController();
-export const STATISTIC_CONTROLLER = new StatisticController();
+export let PARTY_CONTROLLER = new PartyController();
+export let ENTITY_CONTROLLER = new EntityController();
+export let STATISTIC_CONTROLLER = new StatisticController();
+export const SNAPSHOT_CONTROLLER = new SnapshotController();
 
 /**
  * Clase NetworkListener, se encarga de inicializar el servicio de escucha del paquete ao-network-revitalized
@@ -323,4 +326,16 @@ function onMapChange(params: any) {
   localPlayer.inventory.updateEquipment(convertedEquipment);
 
   instance.sendMapChanged();
+}
+
+export function restoreSnapshot(snapshot:Snapshot):void{
+  if(snapshot.getPartyController() != null){
+    PARTY_CONTROLLER = snapshot.getPartyController()!
+  }
+  if(snapshot.getEntityController() != null){
+    ENTITY_CONTROLLER = snapshot.getEntityController()!
+  }
+  if(snapshot.getStatisticController() != null){
+    STATISTIC_CONTROLLER = snapshot.getStatisticController()!
+  }
 }

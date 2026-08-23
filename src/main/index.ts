@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { NetworkListerner } from './backend/controllers/NetworkListener.js'
+import { NetworkListerner } from './backend/controllers/MainController.js'
 import { ViewController } from './backend/view/ViewController.js'
 import { app } from 'electron'
 
