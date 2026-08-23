@@ -329,6 +329,7 @@ function onMapChange(params: any) {
 }
 
 export function restoreSnapshot(snapshot:Snapshot):void{
+  Main.StartingTime = snapshot.getStartingTime();
   if(snapshot.getPartyController() != null){
     PARTY_CONTROLLER = snapshot.getPartyController()!
   }

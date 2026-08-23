@@ -23,8 +23,15 @@ export class Player extends RawPlayer implements Clonable<Player>{
     //this.id = Math.floor((Math.random()*10))
     //this.startTest();
   }
+
   clone(): Player {
+    let parentClone:RawPlayer = super.clone();
     let p = new Player(this.worldId, this.map, this.name, this.guid);
+
+    p.inventory = parentClone.inventory;
+    p.guid = parentClone.getGuid();
+    p.name = parentClone.getName();
+
     for(let i in this.shardList){
       p.shardList.push(this.shardList[i].clone());
     }

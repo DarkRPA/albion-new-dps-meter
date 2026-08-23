@@ -90,7 +90,7 @@ export class ViewController{
         reloadEverything();
       })
 
-      ipcMain.on("boss-mode", (state, data)=>{
+      ipcMain.on("boss-mode", (_state, data)=>{
         if(data){
           SNAPSHOT_CONTROLLER.makeNormalSnapshot();
         }else{

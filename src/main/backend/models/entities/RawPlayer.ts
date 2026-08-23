@@ -15,7 +15,9 @@ export class RawPlayer extends Entity implements Clonable<RawPlayer>{
         this.guid = guid;
     }
   clone(): RawPlayer {
-    let p = new RawPlayer(this.worldId, this.map, this.name, this.guid);
+    const p = new RawPlayer(this.worldId, this.map, this.name, this.guid);
+
+    p.inventory = this.inventory.clone();
 
     return p;
   }

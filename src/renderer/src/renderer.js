@@ -9,6 +9,7 @@
 ══════════════════════════════════════════════════════════ */
 let mapLoaded = false
 let resetOnMapChange = false;
+let lastT0 = 0;
 let t0 = Date.now()
 let paused = false
 let pausedAt = 0
@@ -316,6 +317,8 @@ function _enableBossMode() {
 
   if (window.mainApi && window.mainApi.sendBossMode) {
     window.mainApi.sendBossMode(true)
+    lastT0 = t0;
+    t0 = Date.now();
   }
 }
 
@@ -330,6 +333,7 @@ function _disableBossMode() {
 
   if (window.mainApi && window.mainApi.sendBossMode) {
     window.mainApi.sendBossMode(false)
+    t0 = lastT0;
   }
 }
 

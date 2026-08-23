@@ -6,6 +6,7 @@ import { GLOBAL_PULL_TIME, Player } from '../entities/Player.js'
 import { Clonable } from '../Clonable.js'
 
 export class Shard implements Clonable<Shard> {
+  private player:Player;
   averageTimePerPull: number = 0
   packetList: Array<DamagePacket> = []
   lastPacket: DamagePacket | null = null
@@ -15,12 +16,13 @@ export class Shard implements Clonable<Shard> {
   shardStart: number = 0
   shardEnd: number = 0
 
-  constructor(player: Player|undefined) {
-    this.averageTimePerPull = player!.getAverageTimeBetweenPulls() || 3
+  constructor(player: Player) {
+    this.player = player;
+    this.averageTimePerPull = this.player.getAverageTimeBetweenPulls();
   }
 
   clone(): Shard {
-    let copy = new Shard(undefined);
+    let copy = new Shard(this.player);
     copy.averageTimePerPull = this.averageTimePerPull;
     for(let i in this.packetList){
       copy.packetList.push(this.packetList[i].clone())

@@ -15,7 +15,7 @@ export class Snapshot{
   private entityController:EntityController|null = null;
   private statisticController:StatisticController|null = null;
   /* No IMPLEMENTADO */
-  private id = Date.now();
+  //private id = Date.now();
   private type:SnapshotType = SnapshotType.NORMAL
 
   constructor(type:SnapshotType){

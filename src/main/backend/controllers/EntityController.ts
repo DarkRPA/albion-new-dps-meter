@@ -18,7 +18,7 @@ export class EntityController implements Clonable<EntityController>{
     clone(): EntityController {
       let e = new EntityController();
       if(this.localPlayer){
-        e.localPlayer = this.localPlayer;
+        e.localPlayer = this.localPlayer.clone();
       }
 
       for(let i in this.playerEntityList){
