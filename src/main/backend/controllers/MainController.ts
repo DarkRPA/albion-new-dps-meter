@@ -286,6 +286,11 @@ function hitEnemy(causante:number, damage:number): void {
 }
 
 
+/**
+ * Funcion de Evento encargada de gestionar el evento de Albion Online con número 82, obtención de fama
+ * TODO ver por que la obtención no sé está calculando correctamente en dungeons avalonianas
+ * @param parametros 
+ */
 function obtainFame(parametros: any): void {
   let cantBase = Number(parametros.get(2)) / 10000
   let premium = Number(parametros.get(5))
@@ -295,6 +300,12 @@ function obtainFame(parametros: any): void {
   STATISTIC_CONTROLLER.addFame(calcPremium);
 }
 
+/**
+ * Funcion de evento encargada de gestionar el evento con número 253: 2, cambio de mapa.
+ * Agarra todos los datos necesarios como el worldId del usuario local, el mapa actual en el que está y demás datos
+ * relacionados con el usuario
+ * @param params 
+ */
 function onMapChange(params: any) {
   if (Main.StartingTime == -1) Main.StartingTime = performance.now()
   let instance:ViewController = ViewController.instance;
@@ -328,6 +339,10 @@ function onMapChange(params: any) {
   instance.sendMapChanged();
 }
 
+/**
+ * Restaura la snapshot especificada
+ * @param snapshot La snapshot a restaurar
+ */
 export function restoreSnapshot(snapshot:Snapshot):void{
   Main.StartingTime = snapshot.getStartingTime();
   if(snapshot.getPartyController() != null){
