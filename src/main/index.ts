@@ -5,10 +5,14 @@ import { ViewController } from './backend/view/ViewController.js'
 import { app } from 'electron'
 
 export const Network: NetworkListerner = new NetworkListerner()
+
+
+//Clase principal, encargada de gestionar el arranque de la aplicacion
 export class Main {
   static StartingTime: number = 0
 }
 
+//Deshabilitamos todas la caracteristicas que no son necesarias
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');

@@ -4,10 +4,17 @@ import { ENTITY_CONTROLLER, PARTY_CONTROLLER, restoreSnapshot, STATISTIC_CONTROL
 import { PartyController } from "../controllers/PartyController";
 import { StatisticController } from "../controllers/StatisticController";
 
+/**
+ * Tipo de Snapshot
+ */
 export enum SnapshotType {
   BOSS, NORMAL
 }
 
+/**
+ * Clase Snapshot, encargada de hacer una captura del estado de la aplicación en un momento en especifico.
+ * Ahora mismo no se permite la exportación pero no se descarta en un futuro cercano
+ */
 export class Snapshot{
   private startingTime:number = 0;
   private endingTime:number = performance.now();
@@ -18,6 +25,12 @@ export class Snapshot{
   //private id = Date.now();
   private type:SnapshotType = SnapshotType.NORMAL
 
+  /**
+   * Al construir un objeto de la clase snapshot automaticamente se hace la captura del estado
+   * que realmente es una clonación profunda de los controladores, habría válido clonar únicamente
+   * los objetos y no los controladores completos, si, pero ya lo hice de esta forma
+   * @param type El tipo de snapshot
+   */
   constructor(type:SnapshotType){
     this.startingTime = Main.StartingTime;
     this.type = type;
@@ -48,6 +61,10 @@ export class Snapshot{
     return this.type;
   }
 
+  /**
+   * Invoca al método NetworkController.restoreSnapshot
+   * para restaurar esta snapshot en concreto
+   */
   public restore():void{
     restoreSnapshot(this);
   }

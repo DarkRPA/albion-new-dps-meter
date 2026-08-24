@@ -5,6 +5,16 @@ import { DamagePacket } from './DamagePacket.js'
 import { GLOBAL_PULL_TIME, Player } from '../entities/Player.js'
 import { Clonable } from '../Clonable.js'
 
+/**
+ * Clase Shard, pilar principal del DPS Meter.
+ * Para calcular un DPS realista y no simplemente un total de daño no podemos hacer simplemente
+ * > program starts -> startingTime = 0
+ * > program ends -> endingTime = 10000
+ * > dps = totalDamage / (endingTime - startingTime)
+ * Pues hay mucho tiempo que no se está haciendo daño.
+ * Para solucionar eso aparecen los shards cada shards representa el daño hecho en un espacio de tiempo especifico
+ * si un shard esta X segundos ({@link Player#getAverageTimePerPull()}) sin actividad, ese shard se cierra y se crea otro
+ */
 export class Shard implements Clonable<Shard> {
   private player:Player;
   averageTimePerPull: number = 0

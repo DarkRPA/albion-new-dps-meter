@@ -16,7 +16,7 @@ export class Equipment implements Clonable<Equipment>{
     potion:Item | undefined;
     backpack:Item | undefined;
     mount:Item | undefined;
-
+  
     clone(): Equipment {
       const newEquipment:Equipment = new Equipment();
 
@@ -63,6 +63,11 @@ export class Equipment implements Clonable<Equipment>{
       return newEquipment;
     }
 
+    /**
+     * Carga el equipamiento del array de ID que nos ofrece Albion, aún queda por probar algunas cosas pero por el momento parece
+     * que van en orden los items equipados (0 = mainWeapon... etc)
+     * @param equipment El array de números que nos envía Albion Online y que posee todos los ID de los items equipados
+     */
     loadEquipment(equipment:Array<number>):void{
         for(let i = 0; i < equipment.length; i++){
             if(equipment[i] == 0) continue;

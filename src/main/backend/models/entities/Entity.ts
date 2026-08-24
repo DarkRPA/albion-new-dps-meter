@@ -1,3 +1,6 @@
+/**
+ * Clase Abstracta Entity, representa una entidad cualquiera en el juego, ya sea un mob, un player, un item... etc
+ */
 export abstract class Entity{
     protected worldId:number = -1;
     //El mapa en el que se encontró esta entidad.
