@@ -6,9 +6,10 @@
 
 import { BrowserWindow, ipcMain } from "electron";
 import path from "path";
-import { ENTITY_CONTROLLER, NetworkListerner, PARTY_CONTROLLER, reloadEverything, SNAPSHOT_CONTROLLER, STATISTIC_CONTROLLER } from "../controllers/MainController";
+import { ENTITY_CONTROLLER, PARTY_CONTROLLER, reloadEverything, SNAPSHOT_CONTROLLER, STATISTIC_CONTROLLER } from "../controllers/MainController";
 import { Player } from "../models/entities/Player";
 import { version } from "../../../../package.json";
+import { ProgramTime } from "../models/ProgramTime";
 
 export class ViewController{
     private baseWindow:BrowserWindow;
@@ -85,12 +86,20 @@ export class ViewController{
         return ENTITY_CONTROLLER.localPlayer;
       })
 
+      ipcMain.handle("get-program-timing", (_event)=>{
+        return ProgramTime.getInstance().elapsedTime();
+      }),
+
+      ipcMain.handle("is-paused", (_event)=>{
+        return ProgramTime.getInstance().paused;
+      })
+
       ipcMain.on("pause", ()=>{
-        NetworkListerner.paused = true;
+        ProgramTime.getInstance().pause();
       });
 
       ipcMain.on("unpause", ()=>{
-        NetworkListerner.paused = false;
+        ProgramTime.getInstance().unpause();
       });
 
       ipcMain.on("reset", ()=>{

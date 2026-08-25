@@ -8,7 +8,6 @@
 import { App } from 'ao-network-revitalized/index.js'
 import { Player } from '../models/entities/Player.js'
 import { DamagePacket } from '../models/damage/DamagePacket.js'
-import { Main } from '../../index.js'
 import { ViewController } from '../view/ViewController.js'
 import { PartyController } from './PartyController.js'
 import { EntityController } from './EntityController.js'
@@ -19,11 +18,13 @@ import { ItemEntity } from '../models/entities/ItemEntity.js'
 import { Inventory } from '../models/inventory/Inventory.js'
 import { SnapshotController } from './SnapshopController.js'
 import { Snapshot } from '../models/Snapshot.js'
+import { ProgramTime } from '../models/ProgramTime.js'
 
 export let PARTY_CONTROLLER = new PartyController();
 export let ENTITY_CONTROLLER = new EntityController();
 export let STATISTIC_CONTROLLER = new StatisticController();
 export const SNAPSHOT_CONTROLLER = new SnapshotController();
+const PROGRAM_TIME = ProgramTime.getInstance();
 
 /**
  * Clase NetworkListener, se encarga de inicializar el servicio de escucha del paquete ao-network-revitalized
@@ -35,7 +36,6 @@ export class NetworkListerner {
   //Una lista de todos los usuarios core de la aplicacion, por ejemplo, usuarios de la party
   //Fama total
   //Pausado
-  static paused:boolean = false;
   //Lista de los jugadores no importantes, esta lista se utiliza primordialmente para registrar todos los usuarios
   //que no están en la party y que por consecuencia no son relevantes, solo se guardan sus id's en el mundo, su nombre
   //y su inventario.
@@ -121,6 +121,7 @@ function enterToParty(parametros: any): void {
  */
 export function reloadEverything(){
     STATISTIC_CONTROLLER.totalFame = 0;
+    PROGRAM_TIME.resetTimings();
     PARTY_CONTROLLER.restartDamage();
 }
 
@@ -131,6 +132,9 @@ export function reloadEverything(){
  * @returns void
  */
 function route(contexto: any) {
+
+  
+  
   let params = contexto.parameters
 
   if (contexto.code == 3) return
@@ -257,7 +261,7 @@ function leaveParty(parametros: any): void {
  * @returns void
  */
 function hitEnemy(causante:number, damage:number): void {
-  if(NetworkListerner.paused) return;
+  if(!PROGRAM_TIME.programStarted || PROGRAM_TIME.paused) return;
   let players:Array<Player> = PARTY_CONTROLLER.getPartyMemberfromID(causante);
   let rawPlayer:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerById(causante);
   if(rawPlayer.length == 0) return;
@@ -307,7 +311,10 @@ function obtainFame(parametros: any): void {
  * @param params 
  */
 function onMapChange(params: any) {
-  if (Main.StartingTime == -1) Main.StartingTime = performance.now()
+  if (!PROGRAM_TIME.programStarted) {
+    PROGRAM_TIME.programStarted = true;
+    PROGRAM_TIME.startingTime = performance.now();
+  }
   let instance:ViewController = ViewController.instance;
   //NetworkListerner.foundPlayers = [];
 
@@ -344,7 +351,7 @@ function onMapChange(params: any) {
  * @param snapshot La snapshot a restaurar
  */
 export function restoreSnapshot(snapshot:Snapshot):void{
-  Main.StartingTime = snapshot.getStartingTime();
+  PROGRAM_TIME.restoreSnapshot(snapshot);
   if(snapshot.getPartyController() != null){
     PARTY_CONTROLLER = snapshot.getPartyController()!
   }

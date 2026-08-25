@@ -1,6 +1,7 @@
 /* eslint-disable prefer-const */
-import { Main } from "../..";
 import { Clonable } from "../models/Clonable";
+import { ProgramTime } from "../models/ProgramTime";
+const PROGRAM_TIME = ProgramTime.getInstance();
 
 /**
  * Controlador de las estadisticas, es el componente encargado de registrar y manejar las estadisticas de los players
@@ -24,9 +25,8 @@ export class StatisticController implements Clonable<StatisticController>{
      * @returns La fama por hora
      */
     public getFamePerHour():number{
-        let momentoActual:number = performance.now()
-        let diff:number = (momentoActual - Main.StartingTime) / 1000
-        let famePerHour:number = (this.totalFame / diff) * 3600
+        let elapsed = PROGRAM_TIME.elapsedTime();
+        let famePerHour:number = (this.totalFame / elapsed) * 3600
         return famePerHour
     }
 

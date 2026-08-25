@@ -6,9 +6,7 @@ import { app } from 'electron'
 
 
 //Clase principal, encargada de gestionar el arranque de la aplicacion
-export class Main {
-  static StartingTime: number = 0
-}
+export class Main {}
 
 //Deshabilitamos todas la caracteristicas que no son necesarias
 app.disableHardwareAcceleration();

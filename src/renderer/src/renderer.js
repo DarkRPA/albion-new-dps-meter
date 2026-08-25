@@ -9,11 +9,6 @@
 ══════════════════════════════════════════════════════════ */
 let mapLoaded = false
 let resetOnMapChange = false;
-let lastT0 = 0;
-let t0 = Date.now()
-let paused = false
-let pausedAt = 0
-let pausedTotal = 0
 let totalFame = 0
 let bossMode = false
 
@@ -63,8 +58,6 @@ function removePlayer(name){
 
 function _activateMap(zoneName) {
   mapLoaded = true
-  t0 = Date.now()
-  pausedTotal = 0
   document.getElementById('el-dot').classList.remove('off')
   document.getElementById('el-status').textContent = 'Activo'
   document.getElementById('no-map-screen').style.display = 'none'
@@ -72,6 +65,10 @@ function _activateMap(zoneName) {
   if (bossMode) _disableBossMode()
 
   render()
+}
+
+async function isPaused(){
+  return await window.mainApi.isPaused();
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -100,8 +97,8 @@ function setDamage(name, dmg, healing, idFound, weaponImage) {
     players[pFound].weaponImage = weaponImage;
   };
 
-function setFame(amount) {
-  if (mapLoaded && !paused) totalFame = amount;
+async function setFame(amount) {
+  if (mapLoaded && await !isPaused()) totalFame = amount;
 };
 
 function exists(name){
@@ -113,8 +110,8 @@ function exists(name){
   return false;
 }
 
-function elapsed() {
-  return paused ? pausedAt - t0 - pausedTotal : Date.now() - t0 - pausedTotal
+async function elapsed() {
+  return await window.mainApi.getProgramTiming();
 }
 
 function fmt(n) {
@@ -148,7 +145,7 @@ async function render() {
 
   setFame(await window.mainApi.getFame());
 
-  const ms = elapsed()
+  const ms = await elapsed()
   const sec = Math.max(ms / 1000, 1)
   const fph = (totalFame / sec) * 3600
 
@@ -267,9 +264,7 @@ async function resetAll() {
     setDamage(gottenPlayers[i].name, 0);
   }
 
-  t0 = Date.now();
-  pausedTotal = 0;
-  if (paused) _unpause()
+  if (await isPaused()) _unpause()
   if (bossMode) _disableBossMode()
 
   window.mainApi.sendReset();
@@ -277,13 +272,11 @@ async function resetAll() {
   render()
 }
 
-function togglePause() {
-  paused ? _unpause() : _pause()
+async function togglePause() {
+  await isPaused() ? _unpause() : _pause()
 }
 
 function _pause() {
-  paused = true
-  pausedAt = Date.now()
   document.getElementById('btn-pause').classList.add('on')
   document.getElementById('btn-pause').innerHTML = '▶ Reanudar'
   document.getElementById('el-dot').classList.add('off')
@@ -292,8 +285,6 @@ function _pause() {
 }
 
 function _unpause() {
-  pausedTotal += Date.now() - pausedAt
-  paused = false
   document.getElementById('btn-pause').classList.remove('on')
   document.getElementById('btn-pause').innerHTML = '⏸ Pausar'
   document.getElementById('el-dot').classList.remove('off')
@@ -310,10 +301,16 @@ function _enableBossMode() {
   bossMode = true
   const btnBoss = document.getElementById('btn-boss')
   const bossBanner = document.getElementById('boss-banner')
+  const btnReset = document.getElementById('reset-button')
+  const btnPause = document.getElementById('btn-pause')
 
   if (btnBoss) btnBoss.classList.add('active')
   if (bossBanner) bossBanner.classList.remove('hidden')
   document.body.classList.add('boss-mode-active')
+
+  // Desactivar Reiniciar y Pausar durante el modo boss
+  if (btnReset) btnReset.disabled = true
+  if (btnPause) btnPause.disabled = true
 
   if (window.mainApi && window.mainApi.sendBossMode) {
     window.mainApi.sendBossMode(true)
@@ -326,10 +323,16 @@ function _disableBossMode() {
   bossMode = false
   const btnBoss = document.getElementById('btn-boss')
   const bossBanner = document.getElementById('boss-banner')
+  const btnReset = document.getElementById('reset-button')
+  const btnPause = document.getElementById('btn-pause')
 
   if (btnBoss) btnBoss.classList.remove('active')
   if (bossBanner) bossBanner.classList.add('hidden')
   document.body.classList.remove('boss-mode-active')
+
+  // Reactivar Reiniciar y Pausar al salir del modo boss
+  if (btnReset) btnReset.disabled = false
+  if (btnPause) btnPause.disabled = false
 
   if (window.mainApi && window.mainApi.sendBossMode) {
     window.mainApi.sendBossMode(false)
@@ -388,6 +391,12 @@ function copyDpsData() {
 /* ══════════════════════════════════════════════════════════
    LOOP PRINCIPAL
 ══════════════════════════════════════════════════════════ */
-setInterval(() => {
-  if (mapLoaded && !paused) render()
+setInterval(async () => {
+  let iisPaused = await isPaused();
+  if (mapLoaded && !iisPaused){
+    render()
+  }else{
+    console.log();
+  }
+   
 }, 1000)

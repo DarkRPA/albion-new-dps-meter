@@ -27,6 +27,8 @@ contextBridge.exposeInMainWorld('mainApi', {
   },
   getPlayers: () => ipcRenderer.invoke("get-players"),
   getLocalPlayer: () => ipcRenderer.invoke("get-localplayer"),
+  getProgramTiming: () => ipcRenderer.invoke("get-program-timing"),
+  isPaused: () => ipcRenderer.invoke("is-paused"),
   sendReset: () => ipcRenderer.send("reset"),
   sendPause: () => ipcRenderer.send("pause"),
   sendUnpause: () => ipcRenderer.send("unpause"),

@@ -450,6 +450,18 @@
       letter-spacing: .2px;
     }
 
+    button:disabled {
+      background: #1a1a1a;
+      color: #555;
+      border-color: #222;
+      cursor: not-allowed;
+      opacity: .55;
+      box-shadow: none;
+      transform: none;
+    }
+    button:disabled:hover { border-color: #222; color: #555; transform: none; }
+    button:disabled:active { transform: none; }
+
     .btn-reset {
       background: var(--accent);
       color: #0b0b0b;

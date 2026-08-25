@@ -1,8 +1,8 @@
-import { Main } from "../..";
 import { EntityController } from "../controllers/EntityController";
 import { ENTITY_CONTROLLER, PARTY_CONTROLLER, restoreSnapshot, STATISTIC_CONTROLLER } from "../controllers/MainController";
 import { PartyController } from "../controllers/PartyController";
 import { StatisticController } from "../controllers/StatisticController";
+import { ProgramTime } from "./ProgramTime";
 
 /**
  * Tipo de Snapshot
@@ -18,6 +18,7 @@ export enum SnapshotType {
 export class Snapshot{
   private startingTime:number = 0;
   private endingTime:number = performance.now();
+  private pausedTime:number = 0;
   private partyController:PartyController|null = null;
   private entityController:EntityController|null = null;
   private statisticController:StatisticController|null = null;
@@ -32,7 +33,11 @@ export class Snapshot{
    * @param type El tipo de snapshot
    */
   constructor(type:SnapshotType){
-    this.startingTime = Main.StartingTime;
+    const PROGRAM_TIME = ProgramTime.getInstance();
+    this.startingTime = PROGRAM_TIME.startingTime;
+    this.pausedTime = PROGRAM_TIME.totalTimePaused;
+    this.endingTime = performance.now();
+    
     this.type = type;
     this.partyController = PARTY_CONTROLLER.clone();
     this.entityController = ENTITY_CONTROLLER.clone();
@@ -75,5 +80,9 @@ export class Snapshot{
 
   public getEndingTime():number{
     return this.endingTime;
+  }
+
+  public getPausedTime():number{
+    return this.pausedTime;
   }
 }
