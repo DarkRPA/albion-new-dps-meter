@@ -4,8 +4,6 @@ import { NetworkListerner } from './backend/controllers/MainController.js'
 import { ViewController } from './backend/view/ViewController.js'
 import { app } from 'electron'
 
-export const Network: NetworkListerner = new NetworkListerner()
-
 
 //Clase principal, encargada de gestionar el arranque de la aplicacion
 export class Main {
@@ -22,7 +20,7 @@ app.commandLine.appendSwitch('disable-gpu-rasterization');
 app.commandLine.appendSwitch('disable-gpu-sandbox');
 
 app.whenReady().then(() => {
-  new ViewController();
+  ViewController.getInstance();
   let networkListener = new NetworkListerner();
   networkListener.init();
 })

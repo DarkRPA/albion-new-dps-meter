@@ -144,6 +144,10 @@ export class Item implements Clonable<Item>{
     public static getItem(id:number):Item{
         let item = ITEMS[id-1];
 
+        if(!item){
+            return new Item(id, 0, 0, 999, "", "");
+        }
+
 
         let uniqueName = item["UniqueName"];
         let itemData = Item.loadInformation(uniqueName)!

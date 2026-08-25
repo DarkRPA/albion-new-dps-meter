@@ -37,7 +37,7 @@ export class Player extends RawPlayer implements Clonable<Player>{
       p.shardList.push(this.shardList[i].clone());
     }
     if(this.activeShard != null){
-      p.activeShard = this.activeShard;
+      p.activeShard = this.activeShard.clone();
     }
 
     p.averageTimeBetweenPulls = this.averageTimeBetweenPulls;

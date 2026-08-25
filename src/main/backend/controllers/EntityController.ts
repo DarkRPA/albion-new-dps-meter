@@ -55,6 +55,7 @@ export class EntityController implements Clonable<EntityController>{
      * @param entityList La lista a la que se va a meter la entidad
      * @param entity La entidad
      */
+    //TODO no recuerdo que hace esto
     private addEntityToEntityList(entityList:Array<Entity>, entity:Entity){
         const findingId:number = this.getPositionFromEntityList(this.playerEntityList, entity.getWorldId());
         if(findingId != -1){

@@ -15,7 +15,14 @@ export class ViewController{
 
     static instance:ViewController;
 
-    constructor(){
+    static getInstance(){
+      if(!ViewController.instance){
+          ViewController.instance = new ViewController();
+      }
+      return ViewController.instance;
+    }
+
+    private constructor(){
         if(!ViewController.instance) ViewController.instance = this;
         this.baseWindow = new BrowserWindow({width: 800, height: 600, webPreferences: {
           contextIsolation: true,
