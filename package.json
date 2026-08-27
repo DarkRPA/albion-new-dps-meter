@@ -1,6 +1,6 @@
 {
   "name": "albion-new-dps-meter",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "A simple DPS Meter for Albion Online",
   "main": "./out/main/index.js",
   "author": "Eryos",
