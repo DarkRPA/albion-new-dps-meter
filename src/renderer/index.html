@@ -22,6 +22,12 @@
       --id-not-found-bg: rgba(214, 96, 52, 0.1);
       --id-not-found-border: rgba(214, 96, 52, 0.28);
 
+      /* ── Tokens de Fama y Credi-fama ─────────────────── */
+      --fame:        #f04e3e;
+      --fame-bright: #ff5c47;
+      --credi-fame:  #f2c94c;
+      --credi-fame-bright: #ffd75e;
+
       /* ── Tokens para Modo Boss ────────────────────── */
       --boss-accent: #e05555;
       --boss-accent-glow: rgba(224, 85, 85, 0.6);
@@ -182,7 +188,7 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
 
@@ -210,6 +216,19 @@
       line-height: 1;
     }
     .stat-box .val.timer { color: var(--text); font-size: 19px; }
+
+    /* ── Fama (rojo in-game) ────────────────────────────── */
+    .stat-box .lbl.fame { color: var(--fame); }
+    .stat-box .val.fame { color: var(--fame-bright); }
+    .lbl-icon {
+      height: 12px;
+      width: auto;
+      vertical-align: -2px;
+    }
+
+    /* ── Credi-fama (amarillo) ──────────────────────────── */
+    .stat-box .lbl.credi { color: var(--credi-fame); }
+    .stat-box .val.credi { color: var(--credi-fame-bright); }
 
     /* ── SECTION 2 · Players ──────────────────────────────── */
     #sec-players {
@@ -575,12 +594,16 @@
       <div class="val timer" id="el-timer">00:00:00</div>
     </div>
     <div class="stat-box">
-      <div class="lbl">⭐ Fama total</div>
-      <div class="val" id="el-fame">0</div>
+      <div class="lbl fame"><img class="lbl-icon" src="./assets/fame-icon.png" alt="fama" /> Fama total</div>
+      <div class="val fame" id="el-fame">0</div>
     </div>
     <div class="stat-box">
-      <div class="lbl">📈 Fama/hora</div>
-      <div class="val" id="el-fph">0</div>
+      <div class="lbl fame">📈 Fama/hora</div>
+      <div class="val fame" id="el-fph">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl credi"><img class="lbl-icon" src="./assets/fame-icon-yellow.png" alt="credi-fama" /> Credi-fama total</div>
+      <div class="val credi" id="el-credi-fame">0</div>
     </div>
   </div>
 </section>

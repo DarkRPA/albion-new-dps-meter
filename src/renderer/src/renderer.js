@@ -10,6 +10,7 @@
 let mapLoaded = false
 let resetOnMapChange = false;
 let totalFame = 0
+let totalCrediFama = 0
 let bossMode = false
 
 let players = []
@@ -98,8 +99,18 @@ function setDamage(name, dmg, healing, idFound, weaponImage) {
   };
 
 async function setFame(amount) {
-  if (mapLoaded && await !isPaused()) totalFame = amount;
+  let AIsPaused = await isPaused();
+  if (mapLoaded && !AIsPaused) totalFame = amount;
 };
+
+async function getTotalCrediFama() {
+  let AIsPaused = await isPaused();
+
+  if(mapLoaded && !AIsPaused){
+    let crediFame = await window.mainApi.getCrediFame();
+    totalCrediFama = crediFame;
+  }
+}
 
 function exists(name){
   for(let i = 0; i < players.length; i++){
@@ -144,6 +155,7 @@ async function render() {
   if (!mapLoaded) return
 
   setFame(await window.mainApi.getFame());
+  await getTotalCrediFama();
 
   const ms = await elapsed()
   const sec = Math.max(ms / 1000, 1)
@@ -162,6 +174,7 @@ async function render() {
   document.getElementById('el-timer').textContent = fmtTime(ms)
   document.getElementById('el-fame').textContent = fmt(totalFame)
   document.getElementById('el-fph').textContent = fmt(fph)
+  document.getElementById('el-credi-fame').textContent = fmt(totalCrediFama)
 
   const list = Object.values(players)
   if (!list.length) {

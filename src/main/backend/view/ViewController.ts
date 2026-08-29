@@ -61,6 +61,14 @@ export class ViewController{
         return STATISTIC_CONTROLLER.totalFame;
       });
 
+      ipcMain.handle("get-fame-per-hour", ()=>{
+        return STATISTIC_CONTROLLER.totalFame / ProgramTime.getInstance().elapsedTime();
+      });
+
+      ipcMain.handle("get-credi-fame", ()=>{
+        return STATISTIC_CONTROLLER.totalCrediFame;
+      });
+
       ipcMain.handle("get-damage", (_event, name:string)=>{
         let partyPlayer:Array<Player> = PARTY_CONTROLLER.getPartyMemberFromName(name);
         if(partyPlayer.length <= 0) return undefined;

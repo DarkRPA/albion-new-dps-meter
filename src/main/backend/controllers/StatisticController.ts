@@ -11,6 +11,7 @@ export class StatisticController implements Clonable<StatisticController>{
 
 
     totalFame:number = 0;
+    totalCrediFame:number = 0;
 
     clone(): StatisticController {
       let e = new StatisticController();
@@ -36,5 +37,9 @@ export class StatisticController implements Clonable<StatisticController>{
      */
     public addFame(fame:number):void{
         this.totalFame += fame;
+    }
+
+    public addCrediFame(crediFame:number):void{
+        this.totalCrediFame += crediFame;
     }
 }

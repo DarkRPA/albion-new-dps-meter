@@ -68,13 +68,15 @@ function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
     let code = params.get(253);
-    //console.log(params);
+    console.log(params);
     switch (code) {
       case 2:
         //TODO: Sacar y registrar más información como por ejemplo el mapa al que ha zoneado.
         //El mapa es el parametro(8)
         onMapChange(params)
         break
+      case 298:
+        // Ha activado el autorespec
     }
   }
 }
@@ -133,13 +135,11 @@ export function reloadEverything(){
  */
 function route(contexto: any) {
 
-  
-  
   let params = contexto.parameters
 
   if (contexto.code == 3) return
 
-  switch (contexto.parameters.get(252)) {
+  switch (params.get(252)) {
     case 231:
       //->
       enterToParty(params)
@@ -187,6 +187,9 @@ function route(contexto: any) {
       obtainFame(params)
       //console.log()
       break
+    case 84:
+      obtainCrediFame(params);
+      break;
     case 29:
       let rawPlayer:RawPlayer = new RawPlayer(params.get(0), ENTITY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1), Guid.PLACEHOLDER_GUID);
       rawPlayer.inventory.updateEquipment(params.get(40));
@@ -302,6 +305,12 @@ function obtainFame(parametros: any): void {
   let calcPremium = premium ? cantBase * 1.5 : cantBase
 
   STATISTIC_CONTROLLER.addFame(calcPremium);
+}
+
+function obtainCrediFame(parametros:any):void{
+  let cantidad = Number(parametros.get(2)) / 10000;
+
+  STATISTIC_CONTROLLER.addCrediFame(cantidad);
 }
 
 /**

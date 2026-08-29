@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('mainApi', {
     ipcRenderer.on("mapa-cargado", (_event, data)=> callback(data));
   },
   getFame: () => ipcRenderer.invoke("get-fame"),
+  getCrediFame: () => ipcRenderer.invoke("get-credi-fame"),
+  getFamePerHour: () => ipcRenderer.invoke("get-fame-per-hour"),
   getDamageAndDPS: (name:string) => ipcRenderer.invoke("get-damage", name),
   onPlayerAdded: (callback: (data:any)=>void) => {
     ipcRenderer.on("player-added", (_event, data)=> callback(data));
