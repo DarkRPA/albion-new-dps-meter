@@ -68,7 +68,6 @@ function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
     let code = params.get(253);
-    console.log(params);
     switch (code) {
       case 2:
         //TODO: Sacar y registrar más información como por ejemplo el mapa al que ha zoneado.
