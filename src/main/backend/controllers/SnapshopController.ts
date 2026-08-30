@@ -38,11 +38,11 @@ export class SnapshotController{
    * @param restartData Si el hacer la snapshot debería o no reiniciar el meter
    * @returns El objeto snapshot recien creado
    */
-  public startSnapshot(type:SnapshotType, restartData:boolean = true):Snapshot{
+  public startSnapshot(type:SnapshotType, restartData:boolean = true, shallow = false):Snapshot{
     let result = new Snapshot(type);
     this.snapshots.push(result);
     if(restartData){
-      this.restartData();
+      this.restartData(shallow);
     }
 
     return result;
@@ -53,7 +53,7 @@ export class SnapshotController{
    * @returns Una snapshot de tipo normal
    */
   public makeNormalSnapshot():Snapshot{
-    return this.startSnapshot(SnapshotType.NORMAL);
+    return this.startSnapshot(SnapshotType.NORMAL, true, true);
   }
 
   /**
@@ -63,11 +63,11 @@ export class SnapshotController{
    */
   //Ya ha terminado el boss, restauramos el anterior snapshot
   public makeBossSnapshot():Snapshot{
-    let x = this.startSnapshot(SnapshotType.BOSS);
+    let x = this.startSnapshot(SnapshotType.BOSS, true, true);
 
     let lastSnapshot = this.getLastNormalTypedSnapshot();
     if(lastSnapshot != null){
-      lastSnapshot.restore();
+      lastSnapshot.restore(true);
     }
 
     return x;
@@ -76,7 +76,7 @@ export class SnapshotController{
   /**
    * Metodo para reiniciarlo todo
    */
-  public restartData():void{
-    reloadEverything()
+  public restartData(shallow:boolean):void{
+    reloadEverything(shallow)
   }
 }

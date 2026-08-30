@@ -120,10 +120,15 @@ function enterToParty(parametros: any): void {
 /**
  * Reinicializa todas las variables a 0
  */
-export function reloadEverything(){
-    STATISTIC_CONTROLLER.totalFame = 0;
-    PROGRAM_TIME.resetTimings();
+export function reloadEverything(shallow:boolean = false):void{
+  //Si es shallow, significa que solo borraremos los daños, lo demás lo dejaremos intacto
+  if(shallow){
     PARTY_CONTROLLER.restartDamage();
+    return;
+  }
+  STATISTIC_CONTROLLER.totalFame = 0;
+  PROGRAM_TIME.resetTimings();
+  PARTY_CONTROLLER.restartDamage();
 }
 
 /**
@@ -358,7 +363,47 @@ function onMapChange(params: any) {
  * Restaura la snapshot especificada
  * @param snapshot La snapshot a restaurar
  */
-export function restoreSnapshot(snapshot:Snapshot):void{
+export function restoreSnapshot(snapshot:Snapshot, shallow:boolean = false):void{
+
+  if(shallow){
+    //Solo restauramos el DPS, solo eso.
+    if(snapshot.getPartyController() == null) return;
+    for(let playerId in PARTY_CONTROLLER.membersInParty){
+      let player = PARTY_CONTROLLER.membersInParty[playerId];
+      let savedPartyController:PartyController = snapshot.getPartyController()!;
+      if(savedPartyController.isPlayerInParty(player.getGuid())){
+        //El player está en party, restauramos su daño
+        let foundPlayerInSnapshot = savedPartyController.getPlayerFromGuid(player.getGuid());
+        
+        if(!foundPlayerInSnapshot || !foundPlayerInSnapshot.activeShard) continue;
+        
+        player.activeShard = foundPlayerInSnapshot?.activeShard?.clone();
+        player.shardList = [];
+        for(let shardId in foundPlayerInSnapshot.shardList){
+          player.shardList.push(foundPlayerInSnapshot.shardList[shardId].clone());
+        }
+      }
+    }
+
+    let snapEntityController = snapshot.getEntityController();
+    
+    let localPlayer = ENTITY_CONTROLLER.localPlayer;
+
+    if(snapEntityController == null || !localPlayer) return;
+
+    let snapLocalPlayer = snapEntityController.localPlayer;
+
+    if(!snapLocalPlayer || !snapLocalPlayer.activeShard) return;
+
+    localPlayer.activeShard = snapLocalPlayer.activeShard.clone();
+    localPlayer.shardList = [];
+    for(let shardId in snapLocalPlayer.shardList){
+      localPlayer.shardList.push(snapLocalPlayer.shardList[shardId].clone());
+    }
+
+    return;
+  }
+
   PROGRAM_TIME.restoreSnapshot(snapshot);
   if(snapshot.getPartyController() != null){
     PARTY_CONTROLLER = snapshot.getPartyController()!

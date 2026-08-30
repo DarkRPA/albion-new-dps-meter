@@ -70,8 +70,8 @@ export class Snapshot{
    * Invoca al método NetworkController.restoreSnapshot
    * para restaurar esta snapshot en concreto
    */
-  public restore():void{
-    restoreSnapshot(this);
+  public restore(shallow:boolean = false):void{
+    restoreSnapshot(this, shallow);
   }
 
   public getStartingTime():number{

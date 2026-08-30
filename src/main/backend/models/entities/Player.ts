@@ -140,6 +140,9 @@ export class Player extends RawPlayer implements Clonable<Player>{
     let result = 0;
     for(let i = 0; i < this.shardList.length; i++){
       let shard = this.shardList[i];
+      if(shard.packetList.length == 0){
+        continue;
+      }
       result += shard.getElapsedTime();
     }
 
