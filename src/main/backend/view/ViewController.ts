@@ -116,9 +116,9 @@ export class ViewController{
 
       ipcMain.on("boss-mode", (_state, data)=>{
         if(data){
-          SNAPSHOT_CONTROLLER.makeNormalSnapshot();
+          SNAPSHOT_CONTROLLER.makeNormalSnapshotShallowCopy();
         }else{
-          SNAPSHOT_CONTROLLER.makeBossSnapshot();
+          SNAPSHOT_CONTROLLER.makeBossSnapshotShallowCopy();
         }
       })
     }

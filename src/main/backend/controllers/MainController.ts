@@ -364,6 +364,7 @@ function onMapChange(params: any) {
  * @param snapshot La snapshot a restaurar
  */
 export function restoreSnapshot(snapshot:Snapshot, shallow:boolean = false):void{
+  //Funcionalidad para restauraciones sin profundidad, solo restaura los daños. Equipamiento, fama, miembros de la party se verán intactos.
 
   if(shallow){
     //Solo restauramos el DPS, solo eso.
@@ -403,6 +404,8 @@ export function restoreSnapshot(snapshot:Snapshot, shallow:boolean = false):void
 
     return;
   }
+
+  //Restauración profunda normal
 
   PROGRAM_TIME.restoreSnapshot(snapshot);
   if(snapshot.getPartyController() != null){

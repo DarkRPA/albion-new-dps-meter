@@ -36,6 +36,8 @@ export class SnapshotController{
    * estado de la aplicación y se guarda en memoria hasta que se utilice o se exporte
    * @param type El tipo de la snapshot {@link SnapshotType}
    * @param restartData Si el hacer la snapshot debería o no reiniciar el meter
+   * @param shallow Aunque sea shallow, la copia internamente será profunda, osea, se copiara todo
+   * pero a la hora de reiniciar los datos, en vez de ser un reinicio completo, simplemente reiniciará los daños. Todo lo demás se quedará intacto.
    * @returns El objeto snapshot recien creado
    */
   public startSnapshot(type:SnapshotType, restartData:boolean = true, shallow = false):Snapshot{
@@ -48,11 +50,20 @@ export class SnapshotController{
     return result;
   }
 
+
+  /* /-------------------------------------/
+   *  SISTEMA DE SNAPSHOTS PARA EL MODO BOSS
+   *  Cuando hagamos el sistema de snapshots
+   *  para archivos JSON utilizaremos
+   *  metodos especificos para ello.
+   * /-------------------------------------/ 
+   */
+
   /**
    * Hace una snapshot pero de tipo normal
    * @returns Una snapshot de tipo normal
    */
-  public makeNormalSnapshot():Snapshot{
+  public makeNormalSnapshotShallowCopy():Snapshot{
     return this.startSnapshot(SnapshotType.NORMAL, true, true);
   }
 
@@ -62,7 +73,7 @@ export class SnapshotController{
    * @returns La snapshot de tipo boss
    */
   //Ya ha terminado el boss, restauramos el anterior snapshot
-  public makeBossSnapshot():Snapshot{
+  public makeBossSnapshotShallowCopy():Snapshot{
     let x = this.startSnapshot(SnapshotType.BOSS, true, true);
 
     let lastSnapshot = this.getLastNormalTypedSnapshot();
@@ -75,6 +86,8 @@ export class SnapshotController{
 
   /**
    * Metodo para reiniciarlo todo
+   * 
+   * @param shallow Sí está true reiniciará TODOS los valores, sino, solo los daños de la party
    */
   public restartData(shallow:boolean):void{
     reloadEverything(shallow)
