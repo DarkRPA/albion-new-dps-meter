@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 /* eslint-disable prefer-const */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -8,11 +9,9 @@
 ══════════════════════════════════════════════════════════ */
 let mapLoaded = false
 let resetOnMapChange = false;
-let t0 = Date.now()
-let paused = false
-let pausedAt = 0
-let pausedTotal = 0
 let totalFame = 0
+let totalCrediFama = 0
+let bossMode = false
 
 let players = []
 
@@ -60,12 +59,17 @@ function removePlayer(name){
 
 function _activateMap(zoneName) {
   mapLoaded = true
-  t0 = Date.now()
-  pausedTotal = 0
   document.getElementById('el-dot').classList.remove('off')
   document.getElementById('el-status').textContent = 'Activo'
   document.getElementById('no-map-screen').style.display = 'none'
+
+  if (bossMode) _disableBossMode()
+
   render()
+}
+
+async function isPaused(){
+  return await window.mainApi.isPaused();
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -82,7 +86,6 @@ function playerByName(name){
 }
 
 function setDamage(name, dmg, healing, idFound, weaponImage) {
-    //if (!mapLoaded || paused) return;
     let pFound = playerByName(name);
     if(pFound == -1) {
       players.push({ name, dmg: 0, isHealer: false, dps: 0, idFound: false , weaponImage: ""});
@@ -93,11 +96,21 @@ function setDamage(name, dmg, healing, idFound, weaponImage) {
     players[pFound].healing = Math.abs(healing);
     players[pFound].isHealer = false;
     players[pFound].weaponImage = weaponImage;
-    //render();
   };
-function setFame(amount) {
-  if (mapLoaded && !paused) totalFame = amount;
+
+async function setFame(amount) {
+  let AIsPaused = await isPaused();
+  if (mapLoaded && !AIsPaused) totalFame = amount;
 };
+
+async function getTotalCrediFama() {
+  let AIsPaused = await isPaused();
+
+  if(mapLoaded && !AIsPaused){
+    let crediFame = await window.mainApi.getCrediFame();
+    totalCrediFama = crediFame;
+  }
+}
 
 function exists(name){
   for(let i = 0; i < players.length; i++){
@@ -108,8 +121,8 @@ function exists(name){
   return false;
 }
 
-function elapsed() {
-  return paused ? pausedAt - t0 - pausedTotal : Date.now() - t0 - pausedTotal
+async function elapsed() {
+  return await window.mainApi.getProgramTiming();
 }
 
 function fmt(n) {
@@ -133,6 +146,7 @@ function esc(s) {
 }
 
 window.togglePause = togglePause;
+window.toggleBossMode = toggleBossMode;
 
 /* ══════════════════════════════════════════════════════════
    RENDER
@@ -141,8 +155,9 @@ async function render() {
   if (!mapLoaded) return
 
   setFame(await window.mainApi.getFame());
+  await getTotalCrediFama();
 
-  const ms = elapsed()
+  const ms = await elapsed()
   const sec = Math.max(ms / 1000, 1)
   const fph = (totalFame / sec) * 3600
 
@@ -159,6 +174,7 @@ async function render() {
   document.getElementById('el-timer').textContent = fmtTime(ms)
   document.getElementById('el-fame').textContent = fmt(totalFame)
   document.getElementById('el-fph').textContent = fmt(fph)
+  document.getElementById('el-credi-fame').textContent = fmt(totalCrediFama)
 
   const list = Object.values(players)
   if (!list.length) {
@@ -176,8 +192,7 @@ async function render() {
   const healOnly = list.filter((p) => p.isHealer)
   const maxDmg = Math.max(...dpsOnly.map((p) => p.dmg), 1)
   const maxHeal = Math.max(...dpsOnly.map((p) => Math.abs(p.healing)), 1)
-  
-  // Total damage / healing from the group for the percentage calculation
+
   const totalGroupDmg = dpsOnly.reduce((sum, p) => sum + p.dmg, 0) || 1;
   const totalGroupHeal = dpsOnly.reduce((sum, p) => sum + Math.abs(p.healing), 0) || 1;
 
@@ -195,17 +210,15 @@ async function render() {
   const html = list
     .map((p) => {
       const dps = p.dps
-      const pct = ((p.dmg / maxDmg) * 100).toFixed(1);      
-      const pctHealing = ((p.healing / maxHeal) * 100).toFixed(1);      
+      const pct = ((p.dmg / maxDmg) * 100).toFixed(1);
+      const pctHealing = ((p.healing / maxHeal) * 100).toFixed(1);
 
-      // Group contribution percentage
       const groupPct = ((p.dmg / totalGroupDmg) * 100).toFixed(1)
 
       let rankLabel = `<img src="${p.weaponImage}" class="rank-icon" alt="icon" />`,
         rankCls = ''
       if (!p.isHealer) {
         rankDps++
-        //rankLabel = rankDps
         rankCls = rankDps <= 3 ? `r${rankDps}` : ''
       }
 
@@ -232,12 +245,19 @@ async function render() {
   document.getElementById('el-count').textContent = parts.join(' · ')
 }
 
+/* ══════════════════════════════════════════════════════════
+   EVENT LISTENERS
+══════════════════════════════════════════════════════════ */
 document.getElementById("reset-button").addEventListener("click", ()=>{
   resetAll();
 });
 
 document.getElementById("btn-pause").addEventListener("click", ()=>{
   togglePause();
+});
+
+document.getElementById("btn-boss").addEventListener("click", ()=>{
+  toggleBossMode();
 });
 
 document.getElementById("btn-copiar").addEventListener("click", ()=>{
@@ -257,31 +277,27 @@ async function resetAll() {
     setDamage(gottenPlayers[i].name, 0);
   }
 
-  t0 = Date.now();
-  pausedTotal = 0;
-  if (paused) _unpause()
-  
-  window.mainApi.sendReset();
+  if (await isPaused()) _unpause()
+  if (bossMode) _disableBossMode()
 
+  window.mainApi.sendReset();
 
   render()
 }
 
-function togglePause() {
-  paused ? _unpause() : _pause()
+async function togglePause() {
+  await isPaused() ? _unpause() : _pause()
 }
+
 function _pause() {
-  paused = true
-  pausedAt = Date.now()
   document.getElementById('btn-pause').classList.add('on')
   document.getElementById('btn-pause').innerHTML = '▶ Reanudar'
   document.getElementById('el-dot').classList.add('off')
   document.getElementById('el-status').textContent = 'Pausado'
   window.mainApi.sendPause();
 }
+
 function _unpause() {
-  pausedTotal += Date.now() - pausedAt
-  paused = false
   document.getElementById('btn-pause').classList.remove('on')
   document.getElementById('btn-pause').innerHTML = '⏸ Pausar'
   document.getElementById('el-dot').classList.remove('off')
@@ -289,11 +305,58 @@ function _unpause() {
   window.mainApi.sendUnpause();
 }
 
+/* ── MODO BOSS ───────────────────────────────────────────── */
+function toggleBossMode() {
+  bossMode ? _disableBossMode() : _enableBossMode()
+}
+
+function _enableBossMode() {
+  bossMode = true
+  const btnBoss = document.getElementById('btn-boss')
+  const bossBanner = document.getElementById('boss-banner')
+  const btnReset = document.getElementById('reset-button')
+  const btnPause = document.getElementById('btn-pause')
+
+  if (btnBoss) btnBoss.classList.add('active')
+  if (bossBanner) bossBanner.classList.remove('hidden')
+  document.body.classList.add('boss-mode-active')
+
+  // Desactivar Reiniciar y Pausar durante el modo boss
+  if (btnReset) btnReset.disabled = true
+  if (btnPause) btnPause.disabled = true
+
+  if (window.mainApi && window.mainApi.sendBossMode) {
+    window.mainApi.sendBossMode(true)
+    lastT0 = t0;
+    t0 = Date.now();
+  }
+}
+
+function _disableBossMode() {
+  bossMode = false
+  const btnBoss = document.getElementById('btn-boss')
+  const bossBanner = document.getElementById('boss-banner')
+  const btnReset = document.getElementById('reset-button')
+  const btnPause = document.getElementById('btn-pause')
+
+  if (btnBoss) btnBoss.classList.remove('active')
+  if (bossBanner) bossBanner.classList.add('hidden')
+  document.body.classList.remove('boss-mode-active')
+
+  // Reactivar Reiniciar y Pausar al salir del modo boss
+  if (btnReset) btnReset.disabled = false
+  if (btnPause) btnPause.disabled = false
+
+  if (window.mainApi && window.mainApi.sendBossMode) {
+    window.mainApi.sendBossMode(false)
+    t0 = lastT0;
+  }
+}
+
 function copyDpsData() {
   const list = Object.values(players);
   if (!list.length) return;
 
-  // Ordenar la lista igual que en el render principal
   list.sort((a, b) => {
     if (a.isHealer !== b.isHealer) return a.isHealer ? 1 : -1;
     return a.isHealer ? a.dmg - b.dmg : b.dmg - a.dmg;
@@ -301,14 +364,12 @@ function copyDpsData() {
 
   const dpsOnly = list.filter((p) => !p.isHealer);
   const healOnly = list.filter((p) => p.isHealer);
-  
+
   const totalGroupDmg = dpsOnly.reduce((sum, p) => sum + p.dmg, 0) || 1;
   const totalGroupHeal = healOnly.reduce((sum, p) => sum + Math.abs(p.dmg), 0) || 1;
 
-  // Cabecera del texto
   let textToCopy = "Player|Daño|DPS|porcentaje\n";
 
-  // Rellenar la información
   for (let i = 0; i < list.length; i++) {
     let p = list[i];
     const groupPct = p.isHealer
@@ -318,7 +379,6 @@ function copyDpsData() {
     textToCopy += `${p.name}|${fmt(p.dmg)}|${fmt(p.dps)}|${groupPct}%\n`;
   }
 
-  // Crear un elemento temporal para copiar al portapapeles de manera segura
   const textArea = document.createElement("textarea");
   textArea.value = textToCopy;
   textArea.style.position = "fixed";
@@ -326,11 +386,10 @@ function copyDpsData() {
   document.body.appendChild(textArea);
   textArea.focus();
   textArea.select();
-  
+
   try {
     document.execCommand('copy');
-    
-    // Feedback visual opcional en el botón
+
     const btn = document.getElementById("btn-copiar");
     const originalText = btn.innerHTML;
     btn.innerHTML = '✔ Copiado';
@@ -338,14 +397,19 @@ function copyDpsData() {
   } catch (err) {
     console.error('Error al copiar: ', err);
   }
-  
+
   document.body.removeChild(textArea);
 }
 
 /* ══════════════════════════════════════════════════════════
    LOOP PRINCIPAL
 ══════════════════════════════════════════════════════════ */
-setInterval(() => {
-  if (mapLoaded && !paused) render()
-  //let players = await window.mainApi.getPlayers();
+setInterval(async () => {
+  let iisPaused = await isPaused();
+  if (mapLoaded && !iisPaused){
+    render()
+  }else{
+    console.log();
+  }
+   
 }, 1000)

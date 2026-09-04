@@ -6,16 +6,24 @@
 
 import { BrowserWindow, ipcMain } from "electron";
 import path from "path";
-import { ENTITY_CONTROLLER, NetworkListerner, PARTY_CONTROLLER, reloadEverything, STATISTIC_CONTROLLER } from "../controllers/NetworkListener";
+import { ENTITY_CONTROLLER, PARTY_CONTROLLER, reloadEverything, SNAPSHOT_CONTROLLER, STATISTIC_CONTROLLER } from "../controllers/MainController";
 import { Player } from "../models/entities/Player";
 import { version } from "../../../../package.json";
+import { ProgramTime } from "../models/ProgramTime";
 
 export class ViewController{
     private baseWindow:BrowserWindow;
 
     static instance:ViewController;
 
-    constructor(){
+    static getInstance(){
+      if(!ViewController.instance){
+          ViewController.instance = new ViewController();
+      }
+      return ViewController.instance;
+    }
+
+    private constructor(){
         if(!ViewController.instance) ViewController.instance = this;
         this.baseWindow = new BrowserWindow({width: 800, height: 600, webPreferences: {
           contextIsolation: true,
@@ -53,6 +61,14 @@ export class ViewController{
         return STATISTIC_CONTROLLER.totalFame;
       });
 
+      ipcMain.handle("get-fame-per-hour", ()=>{
+        return STATISTIC_CONTROLLER.totalFame / ProgramTime.getInstance().elapsedTime();
+      });
+
+      ipcMain.handle("get-credi-fame", ()=>{
+        return STATISTIC_CONTROLLER.totalCrediFame;
+      });
+
       ipcMain.handle("get-damage", (_event, name:string)=>{
         let partyPlayer:Array<Player> = PARTY_CONTROLLER.getPartyMemberFromName(name);
         if(partyPlayer.length <= 0) return undefined;
@@ -78,16 +94,32 @@ export class ViewController{
         return ENTITY_CONTROLLER.localPlayer;
       })
 
+      ipcMain.handle("get-program-timing", (_event)=>{
+        return ProgramTime.getInstance().elapsedTime();
+      }),
+
+      ipcMain.handle("is-paused", (_event)=>{
+        return ProgramTime.getInstance().paused;
+      })
+
       ipcMain.on("pause", ()=>{
-        NetworkListerner.paused = true;
+        ProgramTime.getInstance().pause();
       });
 
       ipcMain.on("unpause", ()=>{
-        NetworkListerner.paused = false;
+        ProgramTime.getInstance().unpause();
       });
 
       ipcMain.on("reset", ()=>{
         reloadEverything();
+      })
+
+      ipcMain.on("boss-mode", (_state, data)=>{
+        if(data){
+          SNAPSHOT_CONTROLLER.makeNormalSnapshotShallowCopy();
+        }else{
+          SNAPSHOT_CONTROLLER.makeBossSnapshotShallowCopy();
+        }
       })
     }
 }

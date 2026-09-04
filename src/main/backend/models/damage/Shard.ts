@@ -3,8 +3,20 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { DamagePacket } from './DamagePacket.js'
 import { GLOBAL_PULL_TIME, Player } from '../entities/Player.js'
+import { Clonable } from '../Clonable.js'
 
-export class Shard {
+/**
+ * Clase Shard, pilar principal del DPS Meter.
+ * Para calcular un DPS realista y no simplemente un total de daño no podemos hacer simplemente
+ * > program starts -> startingTime = 0
+ * > program ends -> endingTime = 10000
+ * > dps = totalDamage / (endingTime - startingTime)
+ * Pues hay mucho tiempo que no se está haciendo daño.
+ * Para solucionar eso aparecen los shards cada shards representa el daño hecho en un espacio de tiempo especifico
+ * si un shard esta X segundos ({@link Player#getAverageTimePerPull()}) sin actividad, ese shard se cierra y se crea otro
+ */
+export class Shard implements Clonable<Shard> {
+  private player:Player;
   averageTimePerPull: number = 0
   packetList: Array<DamagePacket> = []
   lastPacket: DamagePacket | null = null
@@ -15,7 +27,28 @@ export class Shard {
   shardEnd: number = 0
 
   constructor(player: Player) {
-    this.averageTimePerPull = player.getAverageTimeBetweenPulls()
+    this.player = player;
+    this.averageTimePerPull = this.player.getAverageTimeBetweenPulls();
+  }
+
+  clone(): Shard {
+    let copy = new Shard(this.player);
+    copy.averageTimePerPull = this.averageTimePerPull;
+    for(let i in this.packetList){
+      copy.packetList.push(this.packetList[i].clone())
+    }
+
+    if(this.lastPacket != null){
+      copy.lastPacket = this.lastPacket.clone();
+    }
+
+    copy.finalDamage = this.finalDamage;
+    copy. finalHealing = this.finalHealing;
+    copy.finalElapsedTime = this.finalElapsedTime;
+    copy.shardStart = this.shardStart;
+    copy.shardEnd = this.shardEnd;
+
+    return copy;
   }
 
   addPacket(paquete: DamagePacket) {
@@ -63,7 +96,7 @@ export class Shard {
       }else if(!heal && !paqueteActual.healing){
         result += paqueteActual?.dmg!
       }
-      
+
     }
 
     if(this.shardEnd){

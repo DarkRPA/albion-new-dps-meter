@@ -1,7 +1,11 @@
 import { defineConfig } from 'electron-vite'
 
 export default defineConfig({
-  main: {},
+  main: {
+    build: {
+      target: "node24"
+    }
+  },
   preload: {},
   renderer: {}
 })

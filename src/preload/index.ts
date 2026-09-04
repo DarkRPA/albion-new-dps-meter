@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('mainApi', {
     ipcRenderer.on("mapa-cargado", (_event, data)=> callback(data));
   },
   getFame: () => ipcRenderer.invoke("get-fame"),
+  getCrediFame: () => ipcRenderer.invoke("get-credi-fame"),
+  getFamePerHour: () => ipcRenderer.invoke("get-fame-per-hour"),
   getDamageAndDPS: (name:string) => ipcRenderer.invoke("get-damage", name),
   onPlayerAdded: (callback: (data:any)=>void) => {
     ipcRenderer.on("player-added", (_event, data)=> callback(data));
@@ -27,10 +29,13 @@ contextBridge.exposeInMainWorld('mainApi', {
   },
   getPlayers: () => ipcRenderer.invoke("get-players"),
   getLocalPlayer: () => ipcRenderer.invoke("get-localplayer"),
+  getProgramTiming: () => ipcRenderer.invoke("get-program-timing"),
+  isPaused: () => ipcRenderer.invoke("is-paused"),
   sendReset: () => ipcRenderer.send("reset"),
   sendPause: () => ipcRenderer.send("pause"),
   sendUnpause: () => ipcRenderer.send("unpause"),
   onGetVersion: (callback: (data:any)=>void)=>{
     ipcRenderer.on("version", (_event, data)=>callback(data));
-  }
+  },
+  sendBossMode: (active: boolean) => ipcRenderer.send('boss-mode', active)
 });

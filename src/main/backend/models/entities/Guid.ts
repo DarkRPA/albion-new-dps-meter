@@ -3,6 +3,9 @@
  * Clase wrapper para los GUID de los usuarios
  */
 export class Guid{
+    /**
+     * El array de numeros (guid) que nos proporciona Albion
+     */
     private guid:Array<number> = [];
     private initialized:boolean = true;
 

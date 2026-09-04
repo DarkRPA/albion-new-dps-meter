@@ -21,6 +21,18 @@
       --bar-heal:   rgba(86, 201, 111, 0.809);
       --id-not-found-bg: rgba(214, 96, 52, 0.1);
       --id-not-found-border: rgba(214, 96, 52, 0.28);
+
+      /* ── Tokens de Fama y Credi-fama ─────────────────── */
+      --fame:        #f04e3e;
+      --fame-bright: #ff5c47;
+      --credi-fame:  #f2c94c;
+      --credi-fame-bright: #ffd75e;
+
+      /* ── Tokens para Modo Boss ────────────────────── */
+      --boss-accent: #e05555;
+      --boss-accent-glow: rgba(224, 85, 85, 0.6);
+      --boss-bg:     rgba(224, 85, 85, 0.12);
+      --boss-border: rgba(224, 85, 85, 0.45);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -30,12 +42,58 @@
       color: var(--text);
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       font-size: 13px;
+      overflow: hidden;
     }
 
     body {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      position: relative;
+    }
+
+    /* ── Capa de Fondo y Ambiente para Modo Boss ─────────── */
+    #boss-bg-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity .5s ease;
+      background: radial-gradient(ellipse at top, rgba(224, 55, 55, 0.18) 0%, transparent 75%);
+      box-shadow: inset 0 0 90px rgba(180, 20, 20, 0.45);
+    }
+
+    body.boss-mode-active #boss-bg-overlay {
+      opacity: 1;
+      animation: bossPulse 2.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes bossPulse {
+      0% {
+        opacity: 0.7;
+        box-shadow: inset 0 0 60px rgba(224, 55, 55, 0.3);
+      }
+      100% {
+        opacity: 1;
+        box-shadow: inset 0 0 110px rgba(224, 55, 55, 0.65);
+      }
+    }
+
+    /* Modificadores globales en Modo Boss */
+    body.boss-mode-active #sec-stats {
+      border-bottom-color: var(--boss-border);
+    }
+    body.boss-mode-active .stat-box {
+      border-color: rgba(224, 85, 85, 0.35);
+      box-shadow: 0 0 10px rgba(224, 85, 85, 0.08);
+    }
+    body.boss-mode-active .sec-label {
+      color: var(--boss-accent);
+    }
+    body.boss-mode-active .sec-label::before {
+      background: var(--boss-accent);
+      box-shadow: 0 0 8px var(--boss-accent-glow);
     }
 
     /* ── Shared section label ─────────────────────────────── */
@@ -49,6 +107,7 @@
       align-items: center;
       gap: 7px;
       margin-bottom: 10px;
+      transition: color .3s;
     }
     .sec-label::before {
       content: '';
@@ -58,19 +117,78 @@
       background: var(--accent);
       border-radius: 2px;
       flex-shrink: 0;
+      transition: background .3s, box-shadow .3s;
     }
 
     /* ── SECTION 1 · Stats ────────────────────────────────── */
     #sec-stats {
+      position: relative;
+      z-index: 1;
       background: var(--bg-card);
       border-bottom: 1px solid var(--border);
       padding: 12px 14px;
       flex-shrink: 0;
+      transition: border-color .3s;
+    }
+
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Banner destacado para Modo Boss */
+    .boss-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, rgba(224, 85, 85, 0.25) 0%, rgba(120, 20, 20, 0.35) 100%);
+      border: 1px solid var(--boss-accent);
+      border-radius: 6px;
+      padding: 7px 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 12px rgba(224, 85, 85, 0.25);
+      animation: fadeIn .2s ease-in-out;
+    }
+    .boss-banner.hidden { display: none; }
+
+    .boss-banner-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: .8px;
+      text-shadow: 0 0 6px var(--boss-accent);
+    }
+
+    .boss-icon {
+      width: 16px;
+      height: 16px;
+      fill: var(--boss-accent);
+      filter: drop-shadow(0 0 4px var(--boss-accent));
+    }
+
+    .boss-dot-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--boss-accent);
+      box-shadow: 0 0 8px var(--boss-accent);
+      animation: blink 0.8s infinite;
+    }
+
+    .boss-banner-sub {
+      font-size: 9.5px;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: .3px;
+      font-weight: 500;
     }
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
 
@@ -80,6 +198,7 @@
       border-radius: 7px;
       padding: 9px 12px;
       text-align: center;
+      transition: border-color .3s, box-shadow .3s;
     }
     .stat-box .lbl {
       font-size: 9.5px;
@@ -98,8 +217,23 @@
     }
     .stat-box .val.timer { color: var(--text); font-size: 19px; }
 
+    /* ── Fama (rojo in-game) ────────────────────────────── */
+    .stat-box .lbl.fame { color: var(--fame); }
+    .stat-box .val.fame { color: var(--fame-bright); }
+    .lbl-icon {
+      height: 12px;
+      width: auto;
+      vertical-align: -2px;
+    }
+
+    /* ── Credi-fama (amarillo) ──────────────────────────── */
+    .stat-box .lbl.credi { color: var(--credi-fame); }
+    .stat-box .val.credi { color: var(--credi-fame-bright); }
+
     /* ── SECTION 2 · Players ──────────────────────────────── */
     #sec-players {
+      position: relative;
+      z-index: 1;
       flex: 1 1 auto;
       overflow-y: auto;
       padding: 12px 14px;
@@ -306,6 +440,8 @@
 
     /* ── SECTION 3 · Controls ─────────────────────────────── */
     #sec-controls {
+      position: relative;
+      z-index: 1;
       background: var(--bg-card);
       border-top: 1px solid var(--border);
       padding: 10px 14px;
@@ -333,6 +469,18 @@
       letter-spacing: .2px;
     }
 
+    button:disabled {
+      background: #1a1a1a;
+      color: #555;
+      border-color: #222;
+      cursor: not-allowed;
+      opacity: .55;
+      box-shadow: none;
+      transform: none;
+    }
+    button:disabled:hover { border-color: #222; color: #555; transform: none; }
+    button:disabled:active { transform: none; }
+
     .btn-reset {
       background: var(--accent);
       color: #0b0b0b;
@@ -347,6 +495,23 @@
     }
     .btn-ghost:hover { border-color: var(--accent-dim); color: var(--accent); }
     .btn-ghost.on  { border-color: #c04444; color: #e05555; }
+
+    /* Estilos del Botón Boss */
+    .btn-boss {
+      border-color: rgba(224, 85, 85, 0.4);
+      color: #e05555;
+    }
+    .btn-boss:hover {
+      background: rgba(224, 85, 85, 0.15);
+      border-color: var(--boss-accent);
+      color: #ff6b6b;
+    }
+    .btn-boss.active {
+      background: var(--boss-accent);
+      color: #ffffff;
+      border-color: #ff6b6b;
+      box-shadow: 0 0 12px rgba(224, 68, 68, 0.6);
+    }
 
     .vdiv { width: 1px; height: 22px; background: var(--border); }
 
@@ -367,6 +532,7 @@
     .dot.off { background: #e05555; animation: none; }
 
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -375,6 +541,9 @@
   </style>
 </head>
 <body>
+
+<!-- Capa de gradiente y destello rojo para el fondo -->
+<div id="boss-bg-overlay"></div>
 
 <!-- ═══════════════════════════════════════════════════════
      PANTALLA: MAPA NO CARGADO
@@ -403,19 +572,38 @@
      SECCIÓN 1 · Estadísticas de sesión
 ════════════════════════════════════════════════════════ -->
 <section id="sec-stats">
-  <div class="sec-label">Sesión activa</div>
+  <!-- Banner de advertencia visual para Modo Boss -->
+  <div class="boss-banner hidden" id="boss-banner">
+    <div class="boss-banner-info">
+      <svg class="boss-icon" viewBox="0 0 24 24">
+        <path d="M12 2C6.47 2 2 6.47 2 12c0 2.83 1.18 5.39 3.07 7.21L5.1 22h13.8l.03-2.79C20.82 17.39 22 14.83 22 12c0-5.53-4.47-10-10-10zm-3 8c.83 0 1.5.67 1.5 1.5S9.83 13 9 13s-1.5-.67-1.5-1.5S8.17 10 9 10zm6 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm-5.5 8v-2h7v2h-7z"/>
+      </svg>
+      <span class="boss-dot-pulse"></span>
+      <span>ENCOMBATE DE BOSS</span>
+    </div>
+    <div class="boss-banner-sub">Snapshot activo · DPS separado</div>
+  </div>
+
+  <div class="stats-header">
+    <div class="sec-label">Sesión activa</div>
+  </div>
+
   <div class="stats-grid">
     <div class="stat-box">
       <div class="lbl">⏱ Tiempo</div>
       <div class="val timer" id="el-timer">00:00:00</div>
     </div>
     <div class="stat-box">
-      <div class="lbl">⭐ Fama total</div>
-      <div class="val" id="el-fame">0</div>
+      <div class="lbl fame"><img class="lbl-icon" src="./assets/fame-icon.png" alt="fama" /> Fama total</div>
+      <div class="val fame" id="el-fame">0</div>
     </div>
     <div class="stat-box">
-      <div class="lbl">📈 Fama/hora</div>
-      <div class="val" id="el-fph">0</div>
+      <div class="lbl fame">📈 Fama/hora</div>
+      <div class="val fame" id="el-fph">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl credi"><img class="lbl-icon" src="./assets/fame-icon-yellow.png" alt="credi-fama" /> Credi-fama total</div>
+      <div class="val credi" id="el-credi-fame">0</div>
     </div>
   </div>
 </section>
@@ -442,6 +630,7 @@
   <div class="sec-label">Controles</div>
   <div class="ctrl-row">
     <button class="btn-reset" id="reset-button">↺ Reiniciar</button>
+    <button class="btn-ghost btn-boss" id="btn-boss">👹 Modo Boss</button>
     <button class="btn-ghost" id="btn-pause">⏸ Pausar</button>
     <div class="vdiv"></div>
     <button class="btn-ghost" id="btn-copiar">📋 Copiar</button>
@@ -451,6 +640,7 @@
     </div>
   </div>
 </section>
+
 <script type="module" src="./src/renderer.js"></script>
 </body>
 </html>
