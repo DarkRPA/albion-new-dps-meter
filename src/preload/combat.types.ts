@@ -10,35 +10,29 @@ export interface GroupTotals {
   damage: number;
   healing: number;
 }
-export interface PlayerDeaths {
-  count: number;
-  events: Array<{ id: string; elapsedMs: number }>;
+/** Campos propios de Muerte que Electron serializa; no incluye métodos ni getters. */
+export interface PlayerDeath {
+  /** Milisegundos del reloj de sesión de ProgramTime. */
+  timestamp: number;
+  causanteId: number;
+  causanteNombre: string;
 }
+export type PlayerDeaths = PlayerDeath[];
 export interface PlayerAbility {
-  id: string;
-  name: string;
-  iconPng: string | null;
-  /** null si main no puede identificar los lanzamientos. */
-  uses: number | null;
-  hits: number;
-  damageTotal: number;
-  /** Calculada por main; null si no hubo impactos. */
-  averageDamagePerHit: number | null;
+  localization: string;
+  urlIcon: string | null;
+  /** Paquetes de daño registrados por main; no cuenta lanzamientos. */
+  ticks: number;
+  damage: number;
 }
-export interface PlayerAbilities {
-  /** null para toda la sesión; intervalo concreto para una selección. */
-  range: TimeRange | null;
-  damageTotal: number;
-  averageDpsAtEnd: number;
-  abilities: PlayerAbility[];
-}
+/** Resumen global indexado por el uniqueName de cada habilidad. */
+export type PlayerAbilities = Record<string, PlayerAbility>;
 export interface PlayerDpsHistory {
   /** Cursor opaco controlado por main. */
   cursor: string;
-  /** true reemplaza la gráfica; false añade puntos e intervalos nuevos. */
+  /** true reemplaza la gráfica; false añade puntos nuevos. */
   replace: boolean;
   points: Array<{ elapsedMs: number; averageDps: number }>;
-  intervals: Array<TimeRange & { id: string }>;
 }
 export type CombatDataArea =
   | "time"

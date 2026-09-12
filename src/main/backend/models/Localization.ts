@@ -7,6 +7,6 @@ export class Localization{
     }
 
     public getTranslation(){
-        return this.translations.get(Localization.selectedLanguage);
+        return this.translations[Localization.selectedLanguage];
     }
 }

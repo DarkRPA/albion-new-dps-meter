@@ -398,7 +398,7 @@ function onMapChange(params: any) {
 function onDeath(params:any){
   let idVictima = params.get(0);
   let idCausante = params.get(2);
-  let nombreCausante = params(3);
+  let nombreCausante = params.get(3);
 
   let playerList:Array<Player> = PARTY_CONTROLLER.getPartyMemberfromID(idVictima);
   if(playerList.length == 0) return;

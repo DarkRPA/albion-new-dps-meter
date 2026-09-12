@@ -11,7 +11,7 @@
  * la respuesta de main; aquí no se incrementa, se pausa ni se estima ese valor.
  */
 export function createCombatDataController(api, { onChange = () => {}, onError = () => {} } = {}) {
-  const ui = { mapReady: false, section: 'Combate', advanced: false, player: null, interval: null }
+  const ui = { mapReady: false, section: 'Combate', advanced: false, player: null }
   // Una entrada por dato global o por combinación de jugador y tipo de dato.
   // value: última respuesta; status: estado de carga para la interfaz.
   // dirty: hay que volver a consultar; inFlight: ya hay una petición pendiente.
@@ -23,8 +23,6 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
   const missingMethods = new Set([
     'isBossMode',
     'getGroupTotals',
-    'getPlayerDeaths',
-    'getPlayerAbilities'
   ])
   // Cambia al reiniciar o cerrar. Las respuestas de la generación anterior
   // se descartan para que una petición antigua no restaure datos ya reiniciados.
@@ -32,17 +30,15 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
   let started = false
   let disposed = false
 
-  // Ejemplo de clave: ["damage", "NombreJugador", null]. El rango distingue
-  // consultas de habilidades heredadas; el historial actual ya no usa intervalos.
-  const playerKey = (kind, name, range = null) => JSON.stringify([kind, name, range])
+  // Una clave identifica el tipo de dato y el jugador al que pertenece.
+  const playerKey = (kind, name) => JSON.stringify([kind, name])
   const scalar = (key, method) => ({ key, method, args: [], area: key })
-  const perPlayer = (kind, method, name, range = null) => ({
-    key: playerKey(kind, name, range),
+  const perPlayer = (kind, method, name) => ({
+    key: playerKey(kind, name),
     method,
-    args: range ? [name, range] : [name],
+    args: [name],
     area: kind,
-    player: name,
-    range
+    player: name
   })
 
   // La lista visible incluye al local aunque no esté entre los miembros del grupo.
@@ -67,7 +63,6 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
       scalar('time', 'getProgramTiming'),
       scalar('fame', 'getFame'),
       scalar('creditFame', 'getCrediFame'),
-      scalar('totals', 'getGroupTotals'),
       ...controls
     ]
     const names = getPlayerNames()
@@ -76,8 +71,6 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
       list.push(perPlayer('deaths', 'getPlayerDeaths', ui.player))
       list.push(perPlayer('history', 'getPlayerDpsHistory', ui.player))
       list.push(perPlayer('abilities', 'getPlayerAbilities', ui.player))
-      if (ui.interval)
-        list.push(perPlayer('abilities', 'getPlayerAbilities', ui.player, ui.interval))
     }
     return list
   }
@@ -140,12 +133,6 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
           points: incoming.replace || !entry.value
             ? incoming.points
             : [...entry.value.points, ...incoming.points],
-          // Compatibilidad con renderer.js, que todavía recorre este campo.
-          intervals: []
-        }
-        if (entry.player === ui.player && ui.interval) {
-          resources.delete(playerKey('abilities', ui.player, ui.interval))
-          ui.interval = null
         }
       } else {
         entry.value = incoming
@@ -181,21 +168,18 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
     }
     if (ui.player && !names.has(ui.player)) {
       ui.player = null
-      ui.interval = null
     }
   }
 
   // Invalidar conserva value: solo marca los datos para volver a solicitarlos.
   // reset=true es la excepción: vacía la caché e invalida respuestas anteriores.
   // areas selecciona tipos de datos; playerNames limita los jugadores afectados.
-  // changedRange solo filtra las consultas heredadas de habilidades por rango.
   // refresh carga lo visible; los datos ocultos quedan pendientes hasta mostrarse.
-  function invalidate({ areas = [], playerNames, changedRange, reset = false }) {
+  function invalidate({ areas = [], playerNames, reset = false }) {
     if (disposed) return
     if (reset) {
       generation++
       resources.clear()
-      ui.interval = null
       onChange('reset')
     }
     // También después de reset: invalidar no depende de una carga anterior.
@@ -204,12 +188,6 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
       const area = ['paused', 'bossMode'].includes(entry.area) ? 'controls' : entry.area
       if (!areas.includes(area)) continue
       if (entry.player && playerNames && !playerNames.includes(entry.player)) continue
-      if (
-        entry.range &&
-        changedRange &&
-        (entry.range.toMs <= changedRange.fromMs || entry.range.fromMs >= changedRange.toMs)
-      )
-        continue
       entry.dirty = !missingMethods.has(entry.method)
     }
     return refresh()
@@ -236,7 +214,7 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
     subscribe('onMapLoad', (payload) => {
       if (payload?.data !== true) return
       activateMap()
-      invalidate({ areas: ['players', 'localPlayer', 'time', 'fame', 'creditFame', 'damage', 'history', 'controls'] })
+      invalidate({ areas: ['players', 'localPlayer', 'time', 'fame', 'creditFame', 'damage', 'history', 'deaths', 'abilities', 'controls'] })
     })
     // Los eventos envían el nombre; la lista y las estadísticas vienen de sus getters.
     subscribe('onPlayerAdded', (playerName) =>
@@ -275,19 +253,7 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
     selectPlayer(name) {
       if (ui.player === name) return
       ui.player = name
-      ui.interval = null
       onChange('selection')
-      return refresh()
-    },
-    // Compatibilidad con los controles antiguos del renderer. El historial actual
-    // entrega intervals: [] y, al recibirse, elimina cualquier selección anterior.
-    selectInterval(range) {
-      // Este método conserva un rango recibido; no genera intervalos de daño.
-      const value = range ? { fromMs: range.fromMs, toMs: range.toMs } : null
-      if (JSON.stringify(ui.interval) === JSON.stringify(value)) return
-      if (ui.interval) resources.delete(playerKey('abilities', ui.player, ui.interval))
-      ui.interval = value
-      onChange('interval')
       return refresh()
     },
     invalidate,
@@ -295,7 +261,7 @@ export function createCombatDataController(api, { onChange = () => {}, onError =
     // El temporizador exterior consulta; nunca calcula ni incrementa el tiempo.
     pollLegacy() {
       return invalidate({
-        areas: ['players', 'localPlayer', 'time', 'fame', 'creditFame', 'damage', 'history', 'controls']
+        areas: ['players', 'localPlayer', 'time', 'fame', 'creditFame', 'damage', 'history', 'deaths', 'abilities', 'controls']
       })
     },
     dispose() {

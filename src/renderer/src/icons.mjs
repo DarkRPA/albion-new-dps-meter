@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type -- Módulo JavaScript vanilla; no admite anotaciones de retorno TypeScript. */
 // Iconos de navegación locales. Las imágenes de jugadores y habilidades vienen de main.
 const shapes = {
+  // Dos hojas diagonales con guardas y empuñaduras opuestas.
   swords:
-    '<path d="m4 3 7 7-2 2-7-7V3h2Zm16 0h2v2l-7 7-2-2 7-7ZM3 15l6 6m-4-4-3 3m13-17L3 15m12 0 6 6m-4-4 3 3M3 3l18 18"/>',
+    '<path d="M3 3h4l12 12-4 4L3 7V3Zm18 0h-4l-5 5m-3 3-6 6 4 4 6-6M14 20l6-6M4 14l6 6m7-3 4 4M7 17l-4 4"/>',
   settings: '<path d="M4 6h16M4 12h16M4 18h16M8 3v6m8 0v6m-6 0v6"/>',
   chart: '<path d="M3 3v18h18M6 15l4-5 4 3 6-8"/>',
   skull:

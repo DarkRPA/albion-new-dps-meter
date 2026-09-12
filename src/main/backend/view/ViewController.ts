@@ -11,6 +11,7 @@ import { Player } from "../models/entities/Player";
 import { version } from "../../../../package.json";
 import { ProgramTime } from "../models/ProgramTime";
 import { Shard } from "../models/damage/Shard";
+import { DamagePacket } from "../models/damage/DamagePacket";
 
 export class ViewController{
     private baseWindow:BrowserWindow;
@@ -93,6 +94,47 @@ export class ViewController{
           let p = PARTY_CONTROLLER.membersInParty[i];
           result.push(p.getName());
         }
+        return result;
+      })
+
+      ipcMain.handle("get-player-deaths", (_event, name)=>{
+        let playerList:Array<Player> = PARTY_CONTROLLER.getPartyMemberFromName(name);
+        if(playerList.length == 0) return;
+        let player:Player = playerList[0];
+
+        return player.muertes;
+      })
+
+      ipcMain.handle("get-player-abilities", (_event, name)=>{
+        let playerList:Array<Player> = PARTY_CONTROLLER.getPartyMemberFromName(name);
+        if(playerList.length == 0) return;
+        let player:Player = playerList[0];
+
+        let result = {};
+
+        for(let shardId in player.shardList){
+          let shard = player.shardList[shardId];
+          for(let packetId in shard.packetList){
+            let packet:DamagePacket = shard.packetList[packetId];
+            let spellUsed = packet.spellUsed;
+
+            if(spellUsed.spellId == -1) continue;
+
+            if(!result[spellUsed.uniqueName]){
+              result[spellUsed.uniqueName] = {
+                "localization": spellUsed.spellLocalizations.getTranslation(),
+                "urlIcon": "https://render.albiononline.com/v1/spell/"+spellUsed.uniqueName.split("_")[0],
+                "ticks": 0,
+                "damage": 0
+              }
+            }
+
+            let store = result[spellUsed.uniqueName];
+            store["ticks"]++;
+            store["damage"] += packet.dmg;
+          }
+        }
+
         return result;
       })
 

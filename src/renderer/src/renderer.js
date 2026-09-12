@@ -35,8 +35,8 @@ const percent = (value) =>
   finite(value) ? value.toLocaleString('es-ES', { maximumFractionDigits: 1 }) + ' %' : '—'
 // get-players devuelve string[]; get-localplayer devuelve string | undefined.
 const roster = () => data.getPlayerNames()
-const key = (area, name, range) => data.playerKey(area, name, range)
-const valueFor = (area, name, range) => data.read(key(area, name, range))
+const key = (area, name) => data.playerKey(area, name)
+const valueFor = (area, name) => data.read(key(area, name))
 
 let metric = 'damage'
 let legacyBossRequested = false // Estado visual del último comando cuando main aún no expone isBossMode.
@@ -149,14 +149,21 @@ function inspector(ui) {
   if (!ui.player) return '<p class="skills-empty">Selecciona un jugador.</p>'
   const p = valueFor('damage', ui.player)
   const deaths = valueFor('deaths', ui.player)
-  return `<span class="eyebrow">Detalle del jugador</span>${png(p?.weaponImage, `Arma de ${ui.player}`, ui.player.slice(0, 2).toUpperCase())}<h2>${esc(ui.player)}</h2>${p?.weaponName ? `<p class="muted small">${esc(p.weaponName)}</p>` : ''}<div class="detail-stat"><span>Daño infligido</span><strong class="gold">${fmt(p?.damage)}</strong></div><div class="detail-stat"><span>Curación total</span><strong class="green">${fmt(p?.healing)}</strong></div><div class="detail-stat"><span>DPS promedio</span><strong>${exact(p?.dps)}</strong></div><div class="detail-stat death-count"><span>${icon('skull')}Muertes</span><strong class="red">${exact(deaths?.count)}</strong></div>${deaths ? `<p class="death-times">${deaths.events.length ? deaths.events.map((d) => clock(d.elapsedMs)).join(' · ') : 'Sin muertes registradas'}</p>` : '<p class="muted small">Datos de muertes no disponibles.</p>'}`
+  return `<span class="eyebrow">Detalle del jugador</span>${png(p?.weaponImage, `Arma de ${ui.player}`, ui.player.slice(0, 2).toUpperCase())}<h2>${esc(ui.player)}</h2>${p?.weaponName ? `<p class="muted small">${esc(p.weaponName)}</p>` : ''}<div class="detail-stat"><span>Daño infligido</span><strong class="gold">${fmt(p?.damage)}</strong></div><div class="detail-stat"><span>Curación total</span><strong class="green">${fmt(p?.healing)}</strong></div><div class="detail-stat"><span>DPS promedio</span><strong>${exact(p?.dps)}</strong></div><div class="detail-stat death-count"><span>${icon('skull')}Muertes</span><strong class="red">${exact(deaths?.length)}</strong></div>${deaths ? `<p class="death-times">${deaths.length ? deaths.map((d) => clock(d.timestamp)).join(' · ') : 'Sin muertes registradas'}</p>` : '<p class="muted small">Datos de muertes no disponibles.</p>'}`
 }
 
 function abilityTable(result, resource) {
   if (!result) return emptyResource(resource, 'Datos de habilidades no disponibles.')
-  if (!result.abilities.length)
-    return '<p class="skills-empty">Sin habilidades ni impactos registrados en este periodo.</p>'
-  return `<div class="table-scroll"><table class="ability-table" aria-label="Daño por habilidad"><thead><tr><th><span class="sr-label">Icono</span></th><th>Habilidad</th><th>Veces usada</th><th>Daño total</th><th>Daño medio / golpe</th></tr></thead><tbody>${result.abilities.map((s) => `<tr><td>${png(s.iconPng, s.name, s.name.slice(0, 1).toUpperCase(), 'skill-portrait')}</td><td>${esc(s.name)}</td><td>${exact(s.uses)}</td><td class="gold">${exact(s.damageTotal)}</td><td>${exact(s.averageDamagePerHit)}<small class="muted hit-count">${exact(s.hits)} golpes</small></td></tr>`).join('')}</tbody></table></div>`
+  // Main devuelve un diccionario por uniqueName, no un array ni una clase Spell.
+  // Orden visual descendente; los valores de daño se conservan tal como llegan.
+  const abilities = Object.entries(result).sort(([, a], [, b]) => b.damage - a.damage)
+  if (!abilities.length)
+    return '<p class="skills-empty">Sin habilidades ni impactos registrados en esta sesión.</p>'
+  const rows = abilities.map(([uniqueName, ability]) => {
+    const name = ability.localization || uniqueName
+    return `<tr><td>${png(ability.urlIcon, name, name.slice(0, 1).toUpperCase(), 'skill-portrait')}</td><td>${esc(name)}</td><td>${exact(ability.ticks)}</td><td class="gold">${exact(ability.damage)}</td></tr>`
+  }).join('')
+  return `<div class="table-scroll"><table class="ability-table" aria-label="Daño por habilidad"><thead><tr><th><span class="sr-label">Icono</span></th><th>Habilidad</th><th>Impactos</th><th>Daño total</th></tr></thead><tbody>${rows}</tbody></table></div>`
 }
 
 function evolution(ui, history, deaths) {
@@ -170,8 +177,7 @@ function breakdown(ui) {
   const history = valueFor('history', ui.player)
   const deaths = valueFor('deaths', ui.player)
   const skills = valueFor('abilities', ui.player)
-  const interval = ui.interval && valueFor('abilities', ui.player, ui.interval)
-  return `<div class="session-strip"><h3>Evolución · ${esc(ui.player)}</h3><span>DPS promedio</span></div>${evolution(ui, history, deaths)}${ui.interval ? `<section class="interval-detail"><div class="heading"><div><span class="eyebrow">Intervalo seleccionado</span><h3>${clock(ui.interval.fromMs)} – ${clock(ui.interval.toMs)}</h3></div><button class="tool" data-action="clear-interval">${icon('close')}Quitar selección</button></div><div class="interval-totals"><span>Daño del tramo <b>${exact(interval?.damageTotal)}</b></span><span>DPS acumulado al final <b>${exact(interval?.averageDpsAtEnd)}</b></span></div>${abilityTable(interval, key('abilities', ui.player, ui.interval))}</section>` : '<p class="interval-hint">Selecciona un tramo de la gráfica para consultar sus habilidades.</p>'}<section class="global-skills"><div class="heading"><div><span class="eyebrow">Detalle del jugador / ${esc(ui.player)}</span><h3>Daño por habilidad <span class="muted small">· Sesión completa</span></h3></div><span class="pill">${exact(skills?.damageTotal)} de daño</span></div>${abilityTable(skills, key('abilities', ui.player))}<p class="skills-note">Veces usada cuenta lanzamientos; la media por golpe se refiere a los impactos registrados.</p></section>`
+  return `<div class="session-strip"><h3>Evolución · ${esc(ui.player)}</h3><span>DPS promedio</span></div>${evolution(ui, history, deaths)}<section class="global-skills"><div class="heading"><div><span class="eyebrow">Detalle del jugador / ${esc(ui.player)}</span><h3>Daño por habilidad <span class="muted small">· Sesión completa</span></h3></div></div>${abilityTable(skills, key('abilities', ui.player))}<p class="skills-note">Impactos corresponde a los ticks de daño registrados por el back-end.</p></section>`
 }
 
 // Traducir muestras a coordenadas SVG. Las divisiones calculan posiciones y tamaños
@@ -182,7 +188,7 @@ function drawGraph() {
   if (!plot || !ui.player || !ui.advanced) return
   const history = valueFor('history', ui.player)
   if (!history?.points.length) return
-  const deaths = valueFor('deaths', ui.player)?.events || []
+  const deaths = valueFor('deaths', ui.player) || []
   // Solo geometría de presentación: cada barra representa una muestra de main.
   const width = plot.clientWidth,
     height = 150
@@ -219,18 +225,12 @@ function drawGraph() {
     .map((n, i) => `<span style="top:${28 + (i * height) / 2}px">${fmt(n)}</span>`)
     .join('')
   const targets =
-    history.intervals
-      .map((range, i) => {
-        const selected = ui.interval?.fromMs === range.fromMs && ui.interval?.toMs === range.toMs
-        return `<button class="time-slice ${selected ? 'chosen' : ''}" data-interval="${i}" style="left:${(range.fromMs / scaleMs) * 100}%;width:${((range.toMs - range.fromMs) / scaleMs) * 100}%" aria-pressed="${selected}" aria-label="Ver habilidades de ${clock(range.fromMs)} a ${clock(range.toMs)}"></button>`
-      })
-      .join('') +
     deaths
       .map((d, i) => ({ ...d, sourceIndex: i }))
-      .filter((d) => finite(d.elapsedMs) && d.elapsedMs >= 0 && d.elapsedMs <= endMs)
+      .filter((d) => finite(d.timestamp) && d.timestamp >= 0 && d.timestamp <= endMs)
       .map(
         (d) =>
-          `<span class="death-mark" style="left:${(d.elapsedMs / scaleMs) * 100}%"><button data-death="${d.sourceIndex}" aria-label="Muerte en ${clock(d.elapsedMs)}. Ver intervalo.">${icon('skull')}</button></span>`
+          `<span class="death-mark" style="left:${(d.timestamp / scaleMs) * 100}%"><button data-death="${d.sourceIndex}" aria-label="Muerte en ${clock(d.timestamp)}.">${icon('skull')}</button></span>`
       )
       .join('')
   const targetNode = plot.querySelector('.graph-targets')
@@ -249,17 +249,17 @@ function drawGraph() {
 // Si main devuelve el mismo tiempo, el contador muestra el mismo tiempo.
 function render() {
   const ui = data.getView()
-  node('no-map-screen').hidden = ui.mapReady
-  node('meter-app').hidden = !ui.mapReady
-  if (!ui.mapReady) return
+  node('no-map-screen').hidden = ui.mapReady || ui.section !== 'Combate'
+  node('copy-fallback').hidden = ui.section !== 'Combate' || !ui.mapReady || node('copy-fallback').hidden
   const main = root.querySelector('main')
-  const scroll = main.scrollTop
+  const scrollPanel = ui.section === 'Combate' ? node('combat-scroll') : node('settings-view')
+  const scroll = scrollPanel.scrollTop
   const focused = document.activeElement
-  const focusKey = ['data-player', 'data-interval', 'data-death', 'data-action'].find(
+  const focusKey = ['data-player', 'data-death', 'data-action'].find(
     (k) => main.contains(focused) && focused.hasAttribute(k)
   )
   const focusValue = focusKey && focused.getAttribute(focusKey)
-  node('combat-view').hidden = ui.section !== 'Combate'
+  node('combat-view').hidden = ui.section !== 'Combate' || !ui.mapReady
   node('settings-view').hidden = ui.section !== 'Ajustes'
   root.querySelectorAll('[data-section]').forEach((b) => {
     b.classList.toggle('active', b.dataset.section === ui.section)
@@ -271,12 +271,10 @@ function render() {
   node('players-layout').classList.toggle('basic-grid', !ui.advanced)
   node('player-inspector').hidden = !ui.advanced
   node('player-breakdown').hidden = !ui.advanced
-  if (ui.section === 'Combate') {
+  if (ui.section === 'Combate' && ui.mapReady) {
     node('el-timer').textContent = clock(data.read('time'))
     node('el-fame').textContent = fmt(data.read('fame'))
     node('el-credit').textContent = fmt(data.read('creditFame'))
-    node('total-damage').textContent = fmt(data.read('totals')?.damage)
-    node('total-healing').textContent = fmt(data.read('totals')?.healing)
     node('el-count').textContent = roster().length ? `/ ${roster().length} jugadores` : ''
     put('players-table', playerTable(ui))
     if (ui.advanced) {
@@ -312,7 +310,7 @@ function render() {
       .find((el) => el.getAttribute(focusKey) === focusValue)
       ?.focus({ preventScroll: true })
   }
-  main.scrollTop = scroll
+  scrollPanel.scrollTop = scroll
 }
 
 async function copyData() {
@@ -337,11 +335,12 @@ async function copyData() {
 
 root.addEventListener('click', async (event) => {
   const button = event.target.closest('button')
-  if (!button || !root.contains(button) || button.disabled || !data.getView().mapReady) return
+  if (!button || !root.contains(button) || button.disabled) return
   if (button.dataset.section) {
     data.setSection(button.dataset.section)
     return
   }
+  if (!data.getView().mapReady || data.getView().section !== 'Combate') return
   if (button.dataset.metric) {
     metric = button.dataset.metric
     root.querySelectorAll('[data-metric]').forEach((b) => {
@@ -355,26 +354,10 @@ root.addEventListener('click', async (event) => {
     data.selectPlayer(button.dataset.player)
     return
   }
-  if (button.hasAttribute('data-interval')) {
-    const interval = valueFor('history', data.getView().player)?.intervals[
-      Number(button.dataset.interval)
-    ]
-    if (interval) data.selectInterval(interval)
-    return
-  }
   if (button.hasAttribute('data-death')) {
     const player = data.getView().player
-    const death = valueFor('deaths', player)?.events[Number(button.dataset.death)]
-    const interval = valueFor('history', player)?.intervals.find(
-      (r) => death && r.fromMs <= death.elapsedMs && death.elapsedMs < r.toMs
-    )
-    if (interval) data.selectInterval(interval)
-    else
-      feedback(
-        death
-          ? `Muerte en ${clock(death.elapsedMs)}. Su intervalo aún no está disponible.`
-          : 'Datos de muerte no disponibles.'
-      )
+    const death = valueFor('deaths', player)?.[Number(button.dataset.death)]
+    feedback(death ? `Muerte en ${clock(death.timestamp)}.${death.causanteNombre ? ` Causante: ${death.causanteNombre}.` : ''}` : 'Datos de muerte no disponibles.')
     return
   }
   try {
@@ -382,9 +365,6 @@ root.addEventListener('click', async (event) => {
       case 'advanced':
         data.setAdvanced(!data.getView().advanced)
         chooseDefaultPlayer()
-        break
-      case 'clear-interval':
-        data.selectInterval(null)
         break
       case 'pause':
         if (data.read('paused')) api.sendUnpause()
@@ -414,6 +394,50 @@ root.addEventListener('click', async (event) => {
     feedback('No se ha podido enviar la acción al back-end.')
   }
 })
+
+// Preferencia visual local: no modifica los datos ni consulta el back-end.
+const defaultAccent = '#d2ae56'
+const accentStorageKey = 'albion-nexus-accent'
+function applyAccent(hex, persist = true) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return
+  const rgb = [1, 3, 5].map((offset) => parseInt(hex.slice(offset, offset + 2), 16))
+  root.style.setProperty('--gold', hex)
+  root.style.setProperty('--accent-rgb', rgb.join(', '))
+  node('accent-color').value = hex
+  node('accent-hex').value = hex.toUpperCase()
+  node('accent-hex').setCustomValidity('')
+  ;['r', 'g', 'b'].forEach((channel, i) => { node(`accent-${channel}`).value = rgb[i] })
+  root.querySelectorAll('[data-accent]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.accent === hex.toLowerCase()))
+  })
+  if (persist) {
+    try { localStorage.setItem(accentStorageKey, hex) } catch { /* Preferencia disponible durante esta sesión. */ }
+  }
+}
+node('accent-color').addEventListener('input', (event) => applyAccent(event.target.value))
+node('accent-hex').addEventListener('change', (event) => {
+  const hex = event.target.value.trim()
+  if (/^#[0-9a-f]{6}$/i.test(hex)) applyAccent(hex)
+  else {
+    event.target.setCustomValidity('Introduce un color HEX de seis cifras, por ejemplo #69A9FF.')
+    event.target.reportValidity()
+  }
+})
+;['r', 'g', 'b'].forEach((channel) => {
+  node(`accent-${channel}`).addEventListener('input', () => {
+    const fields = ['r', 'g', 'b'].map((c) => node(`accent-${c}`))
+    if (fields.some((field) => field.value === '' || !field.validity.valid)) return
+    applyAccent('#' + fields.map((field) => Number(field.value).toString(16).padStart(2, '0')).join(''))
+  })
+})
+root.querySelectorAll('[data-accent]').forEach((button) => {
+  button.addEventListener('click', () => applyAccent(button.dataset.accent))
+})
+node('reset-accent').addEventListener('click', () => applyAccent(defaultAccent))
+let savedAccent = defaultAccent
+try { savedAccent = localStorage.getItem(accentStorageKey) || defaultAccent } catch { /* Usar el color inicial. */ }
+applyAccent(/^#[0-9a-f]{6}$/i.test(savedAccent) ? savedAccent : defaultAccent, false)
+scheduleRender()
 
 node('compact-rows').addEventListener('change', (event) =>
   root.classList.toggle('compact', event.target.checked)

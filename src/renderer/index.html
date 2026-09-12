@@ -12,14 +12,7 @@
   </head>
   <body>
     <div id="albion-nexus">
-      <section id="no-map-screen" role="status" aria-live="polite">
-        <span class="waiting-symbol" aria-hidden="true">◇</span>
-        <h1>El mapa no ha sido cargado aún,<br />cambia de mapa para comenzar</h1>
-        <p>La sesión arrancará automáticamente<br />en cuanto entres a una zona</p>
-        <span class="pill">Esperando zona…</span>
-        <p id="connection-error" hidden></p>
-      </section>
-      <div id="meter-app" class="app-window" hidden>
+      <div id="meter-app" class="app-window">
         <div class="workspace">
           <div class="utility-layout">
             <nav class="rail" aria-label="Módulos">
@@ -36,7 +29,15 @@
               </button>
             </nav>
             <main class="utility-main">
-              <section id="combat-view">
+      <section id="no-map-screen" role="status" aria-live="polite">
+        <img class="waiting-symbol" src="./assets/app-icon.png" alt="Albion DPS Meter" />
+        <h1>El mapa no ha sido cargado aún,<br />cambia de mapa para comenzar</h1>
+        <p>La sesión arrancará automáticamente<br />en cuanto entres a una zona</p>
+        <span class="pill">Esperando zona…</span>
+        <p id="connection-error" hidden></p>
+      </section>
+              <section id="combat-view" hidden>
+                <div id="combat-scroll">
                 <div class="heading">
                   <div>
                     <span class="eyebrow">Sesión actual</span>
@@ -52,13 +53,13 @@
                 </div>
                 <div class="stats">
                   <div class="stat"><label>TIEMPO DE SESIÓN</label><b id="el-timer">—</b></div>
-                  <div class="stat"><label>FAMA TOTAL</label><b id="el-fame" class="red">—</b></div>
+                  <div class="stat"><label><img class="fame-icon" src="./assets/fame-icon.png" alt="" />FAMA TOTAL</label><b id="el-fame" class="red">—</b></div>
                   <div class="stat">
                     <label>FAMA / HORA</label
                     ><b class="red" aria-label="Fama por hora no disponible">—</b>
                   </div>
                   <div class="stat">
-                    <label>CREDIFAMA</label><b id="el-credit" class="gold">—</b>
+                    <label><img class="fame-icon" src="./assets/fame-icon-yellow.png" alt="" />CREDIFAMA TOTAL</label><b id="el-credit" class="gold">—</b>
                   </div>
                 </div>
                 <div id="players-layout" class="analysis-grid basic-grid">
@@ -71,14 +72,25 @@
                       </div>
                     </div>
                     <div id="players-table"></div>
-                    <div class="session-strip">
-                      <span>Curación del grupo <span id="total-healing" class="green">—</span></span
-                      ><span>Daño del grupo <span id="total-damage" class="gold">—</span></span>
-                    </div>
+
                   </section>
                   <aside id="player-inspector" class="inspector" hidden></aside>
                 </div>
                 <section id="player-breakdown" class="player-breakdown" hidden></section>
+                </div>
+        <div class="boss-notice" id="boss-banner" hidden>Modo Boss activo</div>
+        <footer class="commands">
+          <button data-action="reset"><span data-icon="reset"></span>Reiniciar</button>
+          <button data-action="boss" aria-pressed="false">
+            <span data-icon="skull"></span>Modo Boss
+          </button>
+          <button data-action="pause">
+            <span data-icon="pause"></span><span id="pause-label">Pausar</span>
+          </button>
+          <button data-action="copy"><span data-icon="copy"></span>Copiar</button>
+          <span class="capture-status" id="el-status" role="status"></span>
+        </footer>
+
               </section>
               <section id="settings-view" hidden>
                 <div class="heading">
@@ -94,22 +106,31 @@
                     ></span
                   ><input type="checkbox" id="compact-rows"
                 /></label>
+                <section class="accent-settings" aria-labelledby="accent-title">
+                  <h3 id="accent-title">Color de acentuación</h3>
+                  <p class="muted">Personaliza los botones, las selecciones y el gráfico. Se guarda en este equipo.</p>
+                  <div class="accent-editor">
+                    <label class="color-picker-label">Elegir color<input id="accent-color" type="color" value="#d2ae56" /></label>
+                    <label>HEX<input id="accent-hex" type="text" value="#D2AE56" maxlength="7" pattern="#[0-9a-fA-F]{6}" spellcheck="false" /></label>
+                    <fieldset class="rgb-fields"><legend>RGB</legend>
+                      <label>R<input id="accent-r" type="number" min="0" max="255" step="1" value="210" /></label>
+                      <label>G<input id="accent-g" type="number" min="0" max="255" step="1" value="174" /></label>
+                      <label>B<input id="accent-b" type="number" min="0" max="255" step="1" value="86" /></label>
+                    </fieldset>
+                  </div>
+                  <div class="accent-presets" aria-label="Colores sugeridos">
+                    <button type="button" data-accent="#d2ae56" style="--swatch:#d2ae56" aria-label="Dorado"></button>
+                    <button type="button" data-accent="#69a9ff" style="--swatch:#69a9ff" aria-label="Azul"></button>
+                    <button type="button" data-accent="#9b87f5" style="--swatch:#9b87f5" aria-label="Violeta"></button>
+                    <button type="button" data-accent="#4ed6b0" style="--swatch:#4ed6b0" aria-label="Verde menta"></button>
+                    <button type="button" data-accent="#ef8bb9" style="--swatch:#ef8bb9" aria-label="Rosa"></button>
+                    <button type="button" class="tool" id="reset-accent">Restaurar dorado</button>
+                  </div>
+                </section>
               </section>
             </main>
           </div>
         </div>
-        <div class="boss-notice" id="boss-banner" hidden>Modo Boss activo</div>
-        <footer class="commands">
-          <button data-action="reset"><span data-icon="reset"></span>Reiniciar</button>
-          <button data-action="boss" aria-pressed="false">
-            <span data-icon="skull"></span>Modo Boss
-          </button>
-          <button data-action="pause">
-            <span data-icon="pause"></span><span id="pause-label">Pausar</span>
-          </button>
-          <button data-action="copy"><span data-icon="copy"></span>Copiar</button>
-          <span class="capture-status" id="el-status" role="status"></span>
-        </footer>
         <p id="feedback" role="status" aria-live="polite" hidden></p>
         <div class="copy-fallback" id="copy-fallback" hidden>
           <label
