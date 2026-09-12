@@ -36,7 +36,8 @@ export class ProgramTime{
     }
 
     elapsedTime(){
-        return (performance.now() - this.startingTime) - this.totalTimePaused;
+        const now = this.paused ? this.pausedAt : performance.now();
+        return (now - this.startingTime) - this.totalTimePaused;
     }
 
     resetTimings(){

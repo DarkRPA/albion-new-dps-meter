@@ -9,8 +9,10 @@ import { DamagePacket } from '../damage/DamagePacket.js'
 import { RawPlayer } from './RawPlayer.js';
 import { Guid } from './Guid.js';
 import { Clonable } from '../Clonable.js';
+import { SpellInstant } from '../damage/SpellInstant.js';
+import { Muerte } from '../damage/Muerte.js';
 
-export const GLOBAL_PULL_TIME = 6;
+export const GLOBAL_PULL_TIME = 4;
 
 /**
  * Clase Player, abstracción de un jugador que SÍ nos interesa por ejemplo, un miembro de la party.
@@ -18,8 +20,12 @@ export const GLOBAL_PULL_TIME = 6;
 export class Player extends RawPlayer implements Clonable<Player>{
   shardList: Array<Shard> = [];
   activeShard: Shard | null = null;
+  //TODO: Ponerle funcionalidad a GLOBAL_PULL_TIME
   averageTimeBetweenPulls: number = GLOBAL_PULL_TIME;
+  //Añadido historial de hechizo utilizados
+  spellHistory:Array<SpellInstant> = [];
   isLocalPlayer: boolean = false;
+  muertes:Array<Muerte> = [];
 
   constructor(worldId:number = -1, map:string = "", name:string, guid:Guid) {
     super(worldId, map, name, guid);
@@ -36,6 +42,11 @@ export class Player extends RawPlayer implements Clonable<Player>{
     for(let i in this.shardList){
       p.shardList.push(this.shardList[i].clone());
     }
+
+    for(let i in this.spellHistory){
+      p.spellHistory.push(this.spellHistory[i].clone());
+    }
+
     if(this.activeShard != null){
       p.activeShard = this.activeShard.clone();
     }
@@ -50,7 +61,7 @@ export class Player extends RawPlayer implements Clonable<Player>{
    * ! Método de prueba, no debe utilizarse !
    */
   private addRandomPacket() {
-    this.addPacket(new DamagePacket(Math.floor(Math.random() * 100)))
+  //  this.addPacket(new DamagePacket(Math.floor(Math.random() * 100)))
   }
 
   /**
@@ -171,5 +182,13 @@ export class Player extends RawPlayer implements Clonable<Player>{
   restartDmg(){
     this.activeShard = null;
     this.shardList = [];
+  }
+
+  registrarMuerte(muerte:Muerte){
+    this.muertes.push(muerte);
+  }
+
+  contarMuertes(){
+    return this.muertes.length;
   }
 }

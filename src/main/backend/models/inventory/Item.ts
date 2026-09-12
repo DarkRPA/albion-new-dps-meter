@@ -7,6 +7,8 @@ import ITEMS from "../static/items.json";
  * Icono predeterminado en caso de que no haya cargado el render del item
  */
 export const DEFAULT_ITEM_RENDER_NOT_FOUND_ICON = "https://render.albiononline.com/v1/item/T3_MAIN_AXE.png";
+//ID del hacha T3
+export const DEFAULT_ITEM = 8406;
 
 /**
  * Los tipos de equipamiento que hay en un inventario de Albion Online

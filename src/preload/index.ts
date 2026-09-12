@@ -6,12 +6,13 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
 import type {
   CombatDataChanged,
   GroupTotals,
-  PlayerAbilities,
-  PlayerDeaths,
+//  PlayerAbilities,
+//  PlayerDeaths,
   PlayerDpsHistory,
   TimeRange,
   Unsubscribe,
 } from "./combat.types";
+import { Spell } from "../main/backend/models/damage/Spell";
 
 function subscribe<T>(
   channel: string,
@@ -61,7 +62,7 @@ export const mainApi = {
     ipcRenderer.invoke("get-group-totals"),
 
   // Solo para el jugador seleccionado en Vista avanzada.
-  getPlayerDeaths: (name: string): Promise<PlayerDeaths | null> =>
+  getPlayerDeaths: (name: string): Promise<any | null> =>
     ipcRenderer.invoke("get-player-deaths", name),
   getPlayerDpsHistory: (
     name: string,
@@ -71,7 +72,7 @@ export const mainApi = {
   getPlayerAbilities: (
     name: string,
     range?: TimeRange,
-  ): Promise<PlayerAbilities | null> =>
+  ): Promise<Spell | null> =>
     ipcRenderer.invoke("get-player-abilities", name, range),
 
   // Aviso de QUÉ ha cambiado, sin enviar el contenido del recurso.

@@ -19,6 +19,9 @@ import { Inventory } from '../models/inventory/Inventory.js'
 import { SnapshotController } from './SnapshopController.js'
 import { Snapshot } from '../models/Snapshot.js'
 import { ProgramTime } from '../models/ProgramTime.js'
+import { DEFAULT_ITEM, Item } from '../models/inventory/Item.js'
+import { Spell } from '../models/damage/Spell.js'
+import { Muerte } from '../models/damage/Muerte.js'
 
 export let PARTY_CONTROLLER = new PartyController();
 export let ENTITY_CONTROLLER = new EntityController();
@@ -68,7 +71,7 @@ function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
     let code = params.get(253);
-    console.log(params);
+    //console.log(params);
     switch (code) {
       case 2:
         //TODO: Sacar y registrar más información como por ejemplo el mapa al que ha zoneado.
@@ -143,10 +146,30 @@ function route(contexto: any) {
   let params = contexto.parameters
 
   if (contexto.code == 3) return
-
-  console.log(params);
-
+  //console.log(params);
   switch (params.get(252)) {
+    // case 11:
+    //   //BUFFO DEBUFFO ETC
+    //   break;
+    // case 18:
+    //   //USO DE HABILIDAD
+    //   break;
+    // case 19:
+    //   // let causanteS = params.get(0);
+    //   // let objetivo = params.get(1);
+    //   // let spell = Spell.getSpellFromID(params.get(3));
+    case 165:
+    case 166:
+      onDeath(params);
+      break;
+
+    //   break;
+    // case 20:
+    //   console.log(params);
+    //   break;
+    case 278:
+      //console.log(params);
+      break;
     case 231:
       //->
       enterToParty(params)
@@ -177,16 +200,18 @@ function route(contexto: any) {
       player.inventory.updateEquipment(params.get(2));
       break;
     case 6:
+      //console.log(params);
       //Golpea enemigo
       let causante = params.get(6);
+      let spellId = params.get(7);
       let dano = params.get(2);
-      hitEnemy(causante, dano);
+      hitEnemy(causante, dano, spellId);
       break
     case 7:
       //console.log("TEST: ", params);
       let causantes:Array<number> = params.get(6);
       for(let i = 0; i < causantes.length; i++){
-        hitEnemy(causantes[i], params.get(2)[i]);
+        hitEnemy(causantes[i], params.get(2)[i], params.get(7)[i]);
       }
       break
     case 82:
@@ -198,7 +223,7 @@ function route(contexto: any) {
       obtainCrediFame(params);
       break;
     case 29:
-      let rawPlayer:RawPlayer = new RawPlayer(params.get(0), ENTITY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1), Guid.PLACEHOLDER_GUID);
+      let rawPlayer:RawPlayer = new RawPlayer(params.get(0), PARTY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1), Guid.PLACEHOLDER_GUID);
       rawPlayer.inventory.updateEquipment(params.get(40));
       ENTITY_CONTROLLER.addRawPlayer(rawPlayer);
 
@@ -212,7 +237,7 @@ function route(contexto: any) {
     //   p.equipmentChanged(NetworkListerner.foundPlayers[params.get(1)][1]);
     //   break
     case 30:
-      let itemEntity:ItemEntity = new ItemEntity(params.get(0), ENTITY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1));
+      let itemEntity:ItemEntity = new ItemEntity(params.get(0), PARTY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1));
       ENTITY_CONTROLLER.addItemEntity(itemEntity);
       break;
   }
@@ -270,7 +295,7 @@ function leaveParty(parametros: any): void {
  * @param damage El Daño causado
  * @returns void
  */
-function hitEnemy(causante:number, damage:number): void {
+function hitEnemy(causante:number, damage:number, spellId:number): void {
   if(!PROGRAM_TIME.programStarted || PROGRAM_TIME.paused) return;
   let players:Array<Player> = PARTY_CONTROLLER.getPartyMemberfromID(causante);
   let rawPlayer:Array<RawPlayer> = ENTITY_CONTROLLER.getRawPlayerById(causante);
@@ -282,7 +307,7 @@ function hitEnemy(causante:number, damage:number): void {
     if(foundPartyPlayer.length == 0) return;
     foundPartyPlayer[0].setWorldId(rawPlayer[0].getWorldId());
 
-    hitEnemy(causante, damage);
+    hitEnemy(causante, damage, 0);
     return;
   }
 
@@ -293,7 +318,15 @@ function hitEnemy(causante:number, damage:number): void {
     player.inventory = rawPlayer[0].inventory;
   }
 
-  let paquete = new DamagePacket(damage)
+  let playerWeapon:Item|undefined = player.inventory.getEquipment().mainWeapon;
+  
+  if(!playerWeapon){
+    playerWeapon = Item.getItem(DEFAULT_ITEM);
+  }
+
+  let spell:Spell = Spell.getSpellFromID(spellId);
+
+  let paquete = new DamagePacket(damage, playerWeapon, spell)
   player.addPacket(paquete)
 
   //player.addDamage(damage*-1);
@@ -336,15 +369,15 @@ function onMapChange(params: any) {
 
   let localPlayer:Player;
 
-  if (ENTITY_CONTROLLER.localPlayer == undefined) {
+  if (PARTY_CONTROLLER.localPlayer == undefined) {
     localPlayer = new Player(params.get(0), params.get(8), params.get(2), new Guid(params.get(1)));
     localPlayer.isLocalPlayer = true;
-    ENTITY_CONTROLLER.loadLocalPlayer(localPlayer);
+    PARTY_CONTROLLER.loadLocalPlayer(localPlayer);
 
     instance.sendPlayerAdded(localPlayer);
   } else {
-    ENTITY_CONTROLLER.localPlayer.setWorldId(params.get(0));
-    localPlayer = ENTITY_CONTROLLER.localPlayer;
+    PARTY_CONTROLLER.localPlayer.setWorldId(params.get(0));
+    localPlayer = PARTY_CONTROLLER.localPlayer;
     localPlayer.setWorldMap(params.get(8));
   }
   let equipment = params.get(52);
@@ -360,6 +393,18 @@ function onMapChange(params: any) {
   localPlayer.inventory.updateEquipment(convertedEquipment);
 
   instance.sendMapChanged();
+}
+
+function onDeath(params:any){
+  let idVictima = params.get(0);
+  let idCausante = params.get(2);
+  let nombreCausante = params(3);
+
+  let playerList:Array<Player> = PARTY_CONTROLLER.getPartyMemberfromID(idVictima);
+  if(playerList.length == 0) return;
+  let player:Player = playerList[0];
+
+  player.registrarMuerte(new Muerte(idCausante, nombreCausante));
 }
 
 /**
@@ -389,13 +434,13 @@ export function restoreSnapshot(snapshot:Snapshot, shallow:boolean = false):void
       }
     }
 
-    let snapEntityController = snapshot.getEntityController();
+    let snapPartyController = snapshot.getPartyController();
     
-    let localPlayer = ENTITY_CONTROLLER.localPlayer;
+    let localPlayer = PARTY_CONTROLLER.localPlayer;
 
-    if(snapEntityController == null || !localPlayer) return;
+    if(snapPartyController == null || !localPlayer) return;
 
-    let snapLocalPlayer = snapEntityController.localPlayer;
+    let snapLocalPlayer = snapPartyController.localPlayer;
 
     if(!snapLocalPlayer || !snapLocalPlayer.activeShard) return;
 

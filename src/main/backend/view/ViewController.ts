@@ -10,6 +10,7 @@ import { ENTITY_CONTROLLER, PARTY_CONTROLLER, reloadEverything, SNAPSHOT_CONTROL
 import { Player } from "../models/entities/Player";
 import { version } from "../../../../package.json";
 import { ProgramTime } from "../models/ProgramTime";
+import { Shard } from "../models/damage/Shard";
 
 export class ViewController{
     private baseWindow:BrowserWindow;
@@ -96,7 +97,29 @@ export class ViewController{
       })
 
       ipcMain.handle("get-localplayer", (_event)=>{
-        return ENTITY_CONTROLLER.localPlayer?.getName();
+        return PARTY_CONTROLLER.localPlayer?.getName();
+      })
+
+      ipcMain.handle("get-player-dps-history", (_event, name:string)=>{
+        let playerList:Array<Player> = PARTY_CONTROLLER.getPartyMemberFromName(name);
+        if(playerList.length == 0) return;
+        let player:Player = playerList[0];
+
+        let points:Array<any> = [];
+        //let intervals:Array<any> = [];
+        for(let shardId in player.shardList){
+          let shard:Shard = player.shardList[shardId];
+          points.push({
+            "elapsedMs": (shard.shardStart),
+            "averageDps": shard.getDPS()
+          });
+        }
+
+        return {
+          cursor: "cursor_1",
+          replace: true,
+          points: points,
+        };
       })
 
       ipcMain.handle("get-program-timing", (_event)=>{

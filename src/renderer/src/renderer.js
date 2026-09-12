@@ -2,6 +2,8 @@
 import { createCombatDataController } from './data-controller.mjs'
 import { fillIcons, icon } from './icons.mjs'
 
+// Este archivo presenta los datos y envía acciones del usuario.
+// data-controller.mjs se encarga de pedir y guardar las respuestas del back-end.
 const root = document.getElementById('albion-nexus')
 const api = window.mainApi
 const node = (id) => document.getElementById(id)
@@ -15,6 +17,8 @@ const fmt = (n) => {
     return (n / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 }) + ' k'
   return exact(n)
 }
+// Formato exclusivamente visual: convierte los milisegundos recibidos a HH:MM:SS.
+// No guarda tiempo, no consulta el reloj del equipo y no incrementa el valor.
 const clock = (ms) => {
   if (!finite(ms) || ms < 0) return '—'
   const s = Math.floor(ms / 1000)
@@ -65,6 +69,8 @@ function chooseDefaultPlayer() {
   if (candidate) data.selectPlayer(candidate)
 }
 
+// Agrupar respuestas que llegan juntas en un único repintado del navegador.
+// requestAnimationFrame no es un reloj de sesión ni solicita nuevos datos.
 function scheduleRender() {
   if (scheduled) return
   scheduled = true
@@ -156,7 +162,7 @@ function abilityTable(result, resource) {
 function evolution(ui, history, deaths) {
   if (!history) return emptyResource(key('history', ui.player), 'Historial de DPS no disponible.')
   if (!history.points.length) return '<p class="skills-empty">Aún no hay muestras de DPS.</p>'
-  return `<div class="evolution" role="group" aria-label="Evolución de ${esc(ui.player)}"><div class="evolution-plot"><svg class="dps-line" role="img" aria-label="DPS promedio recibido del back-end"></svg><div class="y-labels" aria-hidden="true"></div><div class="graph-targets"></div></div><div class="evolution-axis"></div></div><div class="chart-legend"><span><i class="legend-gold"></i>DPS promedio</span><span class="red">${icon('skull')}Muerte${deaths ? '' : ' · sin datos'}</span><span class="muted">Tiempo de sesión</span></div>`
+  return `<div class="evolution" role="group" aria-label="Evolución de ${esc(ui.player)}"><div class="evolution-plot"><svg class="dps-line" role="img" aria-label="Gráfico de barras del DPS promedio"></svg><div class="y-labels" aria-hidden="true"></div><div class="graph-targets"></div></div><div class="evolution-axis"></div></div><div class="chart-legend"><span><i class="legend-gold"></i>DPS promedio</span><span class="red">${icon('skull')}Muerte${deaths ? '' : ' · sin datos'}</span><span class="muted">Tiempo de sesión</span></div>`
 }
 
 function breakdown(ui) {
@@ -168,6 +174,8 @@ function breakdown(ui) {
   return `<div class="session-strip"><h3>Evolución · ${esc(ui.player)}</h3><span>DPS promedio</span></div>${evolution(ui, history, deaths)}${ui.interval ? `<section class="interval-detail"><div class="heading"><div><span class="eyebrow">Intervalo seleccionado</span><h3>${clock(ui.interval.fromMs)} – ${clock(ui.interval.toMs)}</h3></div><button class="tool" data-action="clear-interval">${icon('close')}Quitar selección</button></div><div class="interval-totals"><span>Daño del tramo <b>${exact(interval?.damageTotal)}</b></span><span>DPS acumulado al final <b>${exact(interval?.averageDpsAtEnd)}</b></span></div>${abilityTable(interval, key('abilities', ui.player, ui.interval))}</section>` : '<p class="interval-hint">Selecciona un tramo de la gráfica para consultar sus habilidades.</p>'}<section class="global-skills"><div class="heading"><div><span class="eyebrow">Detalle del jugador / ${esc(ui.player)}</span><h3>Daño por habilidad <span class="muted small">· Sesión completa</span></h3></div><span class="pill">${exact(skills?.damageTotal)} de daño</span></div>${abilityTable(skills, key('abilities', ui.player))}<p class="skills-note">Veces usada cuenta lanzamientos; la media por golpe se refiere a los impactos registrados.</p></section>`
 }
 
+// Traducir muestras a coordenadas SVG. Las divisiones calculan posiciones y tamaños
+// de barras; no recalculan DPS ni tiempo de juego. elapsedMs y averageDps vienen de main.
 function drawGraph() {
   const ui = data.getView()
   const plot = root.querySelector('.evolution-plot')
@@ -175,27 +183,38 @@ function drawGraph() {
   const history = valueFor('history', ui.player)
   if (!history?.points.length) return
   const deaths = valueFor('deaths', ui.player)?.events || []
-  // Solo geometría de presentación: valores y tramos vienen calculados de main.
+  // Solo geometría de presentación: cada barra representa una muestra de main.
   const width = plot.clientWidth,
     height = 150
   if (!width) return
-  const endMs = Math.max(
-    1,
-    data.read('time') || 0,
-    ...history.points.map((p) => p.elapsedMs),
-    ...deaths.map((d) => d.elapsedMs)
-  )
-  const ceiling = Math.max(1, ...history.points.map((p) => p.averageDps)) * 1.1
+  // El contador y el eje comparten exclusivamente el reloj recibido de main.
+  const endMs = data.read('time')
   const svg = plot.querySelector('svg')
+  if (!finite(endMs) || endMs < 0) {
+    svg.innerHTML = ''
+    plot.querySelector('.y-labels').innerHTML = ''
+    plot.querySelector('.graph-targets').innerHTML = ''
+    plot.parentElement.querySelector('.evolution-axis').textContent = 'Esperando tiempo de sesión…'
+    return
+  }
+  const scaleMs = endMs || 1 // Evitar división por cero sin alterar el tiempo mostrado.
+  const points = history.points.filter((p) =>
+    finite(p.elapsedMs) && p.elapsedMs >= 0 && p.elapsedMs <= endMs && finite(p.averageDps)
+  )
+  const ceiling = Math.max(1, ...points.map((p) => p.averageDps)) * 1.1
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`)
-  const points = history.points.filter((p) => finite(p.elapsedMs) && finite(p.averageDps))
-  const line = points
-    .map(
-      (p, i) =>
-        `${i ? 'L' : 'M'}${(p.elapsedMs / endMs) * width} ${height - (p.averageDps / ceiling) * height}`
-    )
-    .join(' ')
-  svg.innerHTML = `<title>Evolución de ${esc(ui.player)}</title>${[0, 0.5, 1].map((f) => `<line x1="0" x2="${width}" y1="${height * f}" y2="${height * f}" class="evolution-grid"/>`).join('')}${line ? `<path d="${line}" class="evolution-path"/>` : ''}`
+  const ordered = [...points].sort((a, b) => a.elapsedMs - b.elapsedMs)
+  const bars = ordered.map((p, i) => {
+    const x = (p.elapsedMs / scaleMs) * width
+    const previousGap = i > 0 ? ((p.elapsedMs - ordered[i - 1].elapsedMs) / scaleMs) * width : Infinity
+    const nextGap = i + 1 < ordered.length ? ((ordered[i + 1].elapsedMs - p.elapsedMs) / scaleMs) * width : Infinity
+    // El ancho es visual; no representa un intervalo de daño.
+    const barWidth = Math.min(width, 18, Math.max(0.5, Math.min(previousGap, nextGap) * 0.8))
+    const barHeight = Math.max(0, (p.averageDps / ceiling) * height)
+    const left = Math.max(0, Math.min(width - barWidth, x - barWidth / 2))
+    return `<rect x="${left}" y="${height - barHeight}" width="${barWidth}" height="${barHeight}" fill="var(--gold)"><title>${esc(clock(p.elapsedMs))} (${p.elapsedMs} ms) · ${esc(exact(p.averageDps))} DPS</title></rect>`
+  }).join('')
+  svg.innerHTML = `<title>DPS promedio por muestra de ${esc(ui.player)}</title>${[0, 0.5, 1].map((f) => `<line x1="0" x2="${width}" y1="${height * f}" y2="${height * f}" class="evolution-grid"/>`).join('')}${bars}`
   plot.querySelector('.y-labels').innerHTML = [ceiling, ceiling / 2, 0]
     .map((n, i) => `<span style="top:${28 + (i * height) / 2}px">${fmt(n)}</span>`)
     .join('')
@@ -203,13 +222,15 @@ function drawGraph() {
     history.intervals
       .map((range, i) => {
         const selected = ui.interval?.fromMs === range.fromMs && ui.interval?.toMs === range.toMs
-        return `<button class="time-slice ${selected ? 'chosen' : ''}" data-interval="${i}" style="left:${(range.fromMs / endMs) * 100}%;width:${((range.toMs - range.fromMs) / endMs) * 100}%" aria-pressed="${selected}" aria-label="Ver habilidades de ${clock(range.fromMs)} a ${clock(range.toMs)}"></button>`
+        return `<button class="time-slice ${selected ? 'chosen' : ''}" data-interval="${i}" style="left:${(range.fromMs / scaleMs) * 100}%;width:${((range.toMs - range.fromMs) / scaleMs) * 100}%" aria-pressed="${selected}" aria-label="Ver habilidades de ${clock(range.fromMs)} a ${clock(range.toMs)}"></button>`
       })
       .join('') +
     deaths
+      .map((d, i) => ({ ...d, sourceIndex: i }))
+      .filter((d) => finite(d.elapsedMs) && d.elapsedMs >= 0 && d.elapsedMs <= endMs)
       .map(
-        (d, i) =>
-          `<span class="death-mark" style="left:${(d.elapsedMs / endMs) * 100}%"><button data-death="${i}" aria-label="Muerte en ${clock(d.elapsedMs)}. Ver intervalo.">${icon('skull')}</button></span>`
+        (d) =>
+          `<span class="death-mark" style="left:${(d.elapsedMs / scaleMs) * 100}%"><button data-death="${d.sourceIndex}" aria-label="Muerte en ${clock(d.elapsedMs)}. Ver intervalo.">${icon('skull')}</button></span>`
       )
       .join('')
   const targetNode = plot.querySelector('.graph-targets')
@@ -224,6 +245,8 @@ function drawGraph() {
     .join('')
 }
 
+// Leer los últimos valores de la caché y escribirlos en el DOM.
+// Si main devuelve el mismo tiempo, el contador muestra el mismo tiempo.
 function render() {
   const ui = data.getView()
   node('no-map-screen').hidden = ui.mapReady
@@ -409,6 +432,9 @@ if (!api) {
     'No se ha podido conectar con la aplicación. Abre el medidor desde Electron.'
 } else {
   data.start()
+  // Frecuencia de consultas, no contador de sesión: cada segundo pedimos datos.
+  // El tiempo mostrado solo cambia cuando getProgramTiming devuelve otro valor.
+  // La pausa y el reinicio del tiempo son responsabilidad del back-end.
   pollTimer = setInterval(() => data.pollLegacy(), 1000)
 }
 window.addEventListener('beforeunload', () => {

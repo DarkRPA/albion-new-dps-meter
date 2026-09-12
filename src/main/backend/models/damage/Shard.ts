@@ -4,6 +4,7 @@
 import { DamagePacket } from './DamagePacket.js'
 import { GLOBAL_PULL_TIME, Player } from '../entities/Player.js'
 import { Clonable } from '../Clonable.js'
+import { ProgramTime } from '../ProgramTime.js';
 
 /**
  * Clase Shard, pilar principal del DPS Meter.
@@ -54,7 +55,7 @@ export class Shard implements Clonable<Shard> {
   addPacket(paquete: DamagePacket) {
     if(Number.isNaN(paquete.dmg)) return;
     if (this.lastPacket == null) {
-      this.shardStart = performance.now()
+      this.shardStart = ProgramTime.getInstance().elapsedTime();
       this.lastPacket = paquete
       this.packetList.push(paquete)
       return 0
@@ -72,7 +73,7 @@ export class Shard implements Clonable<Shard> {
   }
 
   private checkTimeDifference(p0: DamagePacket, p1: DamagePacket) {
-    return Math.abs(p1.timestamp - p0.timestamp) / 1000 > this.averageTimePerPull
+    return (Math.abs(p1.timestamp - p0.timestamp) / 1000) > this.averageTimePerPull
   }
 
   getTotalDamage(heal = false): number {
@@ -116,7 +117,7 @@ export class Shard implements Clonable<Shard> {
 
   getElapsedTime(): number {
     if(this.shardEnd && this.finalElapsedTime){
-      return this.finalElapsedTime;
+      return (this.finalElapsedTime < this.averageTimePerPull)?this.averageTimePerPull:this.finalElapsedTime;
     }
 
     let firstPacket = this.packetList[0]

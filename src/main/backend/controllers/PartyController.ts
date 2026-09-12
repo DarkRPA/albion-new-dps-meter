@@ -9,7 +9,7 @@ import { ENTITY_CONTROLLER } from "./MainController";
  * Controlador encargado de gestionar todo lo relacionado con la party
  */
 export class PartyController implements Clonable<PartyController>{
-
+    public localPlayer:Player|undefined;
     /**
      * Indica si el usuario local está en una party o no
      */
@@ -21,6 +21,9 @@ export class PartyController implements Clonable<PartyController>{
 
     clone(): PartyController {
       let p = new PartyController();
+      if(this.localPlayer){
+        p.localPlayer = this.localPlayer.clone();
+      }
       p.isInParty = this.isInParty;
       for(let i in this.membersInParty){
         p.membersInParty.push(this.membersInParty[i].clone());
@@ -67,8 +70,8 @@ export class PartyController implements Clonable<PartyController>{
      * @returns Un objeto de tipo {@link Player} si está en la party o undefined si no
      */
     public getPlayerFromGuid(guid:Guid):Player|undefined{
-        if(ENTITY_CONTROLLER.localPlayer)
-            if(ENTITY_CONTROLLER.localPlayer.getGuid().equal(guid)) return ENTITY_CONTROLLER.localPlayer;
+        if(this.localPlayer)
+            if(this.localPlayer.getGuid().equal(guid)) return this.localPlayer;
         for(let i = 0; i < this.membersInParty.length; i++){
             if(this.membersInParty[i].getGuid().equal(guid)){
                 return this.membersInParty[i];
@@ -123,8 +126,8 @@ export class PartyController implements Clonable<PartyController>{
      * @see {@link RawPlayer.worldId} 
      */
     public getPartyMemberfromID(id:number):Array<Player>{
-        if(ENTITY_CONTROLLER.localPlayer)
-            if(ENTITY_CONTROLLER.localPlayer?.getWorldId() == id) return [ENTITY_CONTROLLER.localPlayer];
+        if(this.localPlayer)
+            if(this.localPlayer?.getWorldId() == id) return [this.localPlayer];
         return this.membersInParty.filter((s) => s.getWorldId() == id);
     }
 
@@ -134,8 +137,8 @@ export class PartyController implements Clonable<PartyController>{
      * @returns Un array de longitud 1 con el usuario que tenga ese nombre o longitud 0 si no encontró nada
      */
     public getPartyMemberFromName(name:string):Array<Player>{
-        if(ENTITY_CONTROLLER.localPlayer)
-            if(ENTITY_CONTROLLER.localPlayer?.getName() == name) return [ENTITY_CONTROLLER.localPlayer];
+        if(this.localPlayer)
+            if(this.localPlayer?.getName() == name) return [this.localPlayer];
         return this.membersInParty.filter((s) => s.getName() == name);
     }
 
@@ -143,8 +146,8 @@ export class PartyController implements Clonable<PartyController>{
      * Metodo encargado de reiniciar el daño de todos los miembros de la party
      */
     public restartDamage():void{
-        if(ENTITY_CONTROLLER.localPlayer)
-            ENTITY_CONTROLLER.localPlayer?.restartDmg();
+        if(this.localPlayer)
+            this.localPlayer?.restartDmg();
 
         for(let i = 0; i < this.membersInParty.length; i++){
             this.membersInParty[i].restartDmg();
@@ -163,5 +166,13 @@ export class PartyController implements Clonable<PartyController>{
                 player.inventory = rawPlayer[0].inventory;
             }
         }
+    }
+
+    /**
+     * Actualiza el usuario local
+     * @param player El usuario local
+     */
+    public loadLocalPlayer(player:Player){
+        this.localPlayer = player;
     }
 }

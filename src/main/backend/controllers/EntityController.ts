@@ -3,7 +3,6 @@
 import { Clonable } from "../models/Clonable";
 import { Entity } from "../models/entities/Entity";
 import { ItemEntity } from "../models/entities/ItemEntity";
-import { Player } from "../models/entities/Player";
 import { RawPlayer } from "../models/entities/RawPlayer";
 
 /**
@@ -11,15 +10,12 @@ import { RawPlayer } from "../models/entities/RawPlayer";
  */
 export class EntityController implements Clonable<EntityController>{
 
-    public localPlayer:Player|undefined;
+    
     public playerEntityList:Array<RawPlayer> = [];
     public equipmentEntityList:Array<ItemEntity> = [];
 
     clone(): EntityController {
       let e = new EntityController();
-      if(this.localPlayer){
-        e.localPlayer = this.localPlayer.clone();
-      }
 
       for(let i in this.playerEntityList){
         e.playerEntityList.push(this.playerEntityList[i].clone());
@@ -77,14 +73,6 @@ export class EntityController implements Clonable<EntityController>{
         }
 
         return -1;
-    }
-
-    /**
-     * Actualiza el usuario local
-     * @param player El usuario local
-     */
-    public loadLocalPlayer(player:Player){
-        this.localPlayer = player;
     }
 
     /**
