@@ -68,6 +68,7 @@ function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
     let code = params.get(253);
+    console.log(params);
     switch (code) {
       case 2:
         //TODO: Sacar y registrar más información como por ejemplo el mapa al que ha zoneado.
@@ -142,6 +143,8 @@ function route(contexto: any) {
   let params = contexto.parameters
 
   if (contexto.code == 3) return
+
+  console.log(params);
 
   switch (params.get(252)) {
     case 231:

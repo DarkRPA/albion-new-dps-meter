@@ -1,0 +1,1068 @@
+#albion-nexus {
+  --gold: #d2ae56;
+  --ink: #e9e7df;
+  --muted: #aaa9a2;
+  --line: #2a2c2c;
+  --surface: #141616;
+  --red: #f07162;
+  --green: #79c39a;
+  color: var(--ink);
+  font:
+    14px/1.5 'Segoe UI',
+    system-ui,
+    sans-serif;
+  color-scheme: dark;
+  width: 100%;
+}
+#albion-nexus * {
+  box-sizing: border-box;
+}
+#albion-nexus button,
+#albion-nexus select,
+#albion-nexus input,
+#albion-nexus textarea {
+  font: inherit;
+}
+#albion-nexus button {
+  cursor: pointer;
+}
+#albion-nexus button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+#albion-nexus button {
+  color: inherit;
+}
+#albion-nexus [hidden] {
+  display: none !important;
+}
+#albion-nexus svg.lucide {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+#albion-nexus .app-window {
+  background: #0d0f0f;
+  border: 1px solid #363838;
+  border-radius: 12px;
+  overflow: hidden;
+}
+#albion-nexus .app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  padding: 15px 22px;
+  background: #171919;
+}
+#albion-nexus .brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--gold);
+  letter-spacing: 1px;
+  font-size: 13px;
+}
+#albion-nexus .brand span {
+  color: #c1c1b8;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+}
+#albion-nexus .demo-label {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+}
+#albion-nexus h2,
+#albion-nexus h3,
+#albion-nexus p {
+  margin: 0;
+}
+#albion-nexus h2 {
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+#albion-nexus h3 {
+  font-size: 15px;
+  font-weight: 500;
+}
+#albion-nexus .eyebrow {
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+#albion-nexus .muted {
+  color: var(--muted);
+}
+#albion-nexus .heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+#albion-nexus .small {
+  font-size: 12px;
+}
+#albion-nexus .pill {
+  border: 1px solid var(--line);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--muted);
+}
+#albion-nexus .stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+  margin: 18px 0 25px;
+}
+#albion-nexus .stat {
+  background: var(--surface);
+  padding: 14px 16px;
+  min-width: 0;
+}
+#albion-nexus .stat label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+#albion-nexus .stat b {
+  font-size: 24px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+#albion-nexus .gold {
+  color: var(--gold);
+}
+#albion-nexus .red {
+  color: var(--red);
+}
+#albion-nexus .green {
+  color: var(--green);
+}
+#albion-nexus .tool {
+  background: #202323;
+  border: 1px solid #3a3d3d;
+  border-radius: 6px;
+  padding: 7px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+#albion-nexus .tool.active,
+#albion-nexus .switches button.active {
+  background: #322c1d;
+  border-color: #75623b;
+  color: #e9c778;
+}
+#albion-nexus .switches {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+#albion-nexus .switches button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 6px 11px;
+  color: var(--muted);
+}
+#albion-nexus .table-scroll {
+  overflow-x: auto;
+}
+#albion-nexus table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+#albion-nexus th {
+  text-align: right;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  padding: 0 12px 5px;
+  white-space: nowrap;
+}
+#albion-nexus th:first-child {
+  text-align: left;
+}
+#albion-nexus td {
+  padding: 11px 12px;
+  background: #181b1a;
+  text-align: right;
+  white-space: nowrap;
+}
+#albion-nexus td:first-child {
+  text-align: left;
+  min-width: 175px;
+  position: relative;
+  border-radius: 5px 0 0 5px;
+}
+#albion-nexus td:last-child {
+  border-radius: 0 5px 5px 0;
+  color: var(--gold);
+  font-weight: 500;
+}
+#albion-nexus .player-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+#albion-nexus .player-name button {
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+}
+#albion-nexus .rank {
+  color: var(--muted);
+  width: 14px;
+  font-size: 11px;
+}
+#albion-nexus .weapon {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  background: #302a1a;
+  border: 1px solid #665633;
+  border-radius: 5px;
+  color: var(--gold);
+}
+#albion-nexus .damage-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #c9a22712;
+  pointer-events: none;
+  border-left: 2px solid #c9a277;
+}
+#albion-nexus .heal-line {
+  display: block;
+  height: 2px;
+  background: var(--green);
+  margin-top: 4px;
+}
+#albion-nexus .commands {
+  padding: 13px 20px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
+  background: #151717;
+}
+#albion-nexus .commands button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 1px solid #3a3c3c;
+  border-radius: 5px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+#albion-nexus .commands button[aria-pressed='true'] {
+  border-color: var(--red);
+  color: var(--red);
+  background: #321c1c;
+}
+#albion-nexus .capture-status {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--green);
+}
+#albion-nexus .boss-notice {
+  padding: 9px 22px;
+  background: #321b1c;
+  border-top: 1px solid #81423c;
+  color: #ffaea4;
+  font-size: 12px;
+}
+#albion-nexus .lab-caption {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  color: #aaa;
+  font-size: 12px;
+  padding: 11px 2px;
+}
+#albion-nexus .notice {
+  color: #d2ae56;
+}
+#albion-nexus .utility-layout {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+}
+#albion-nexus .rail {
+  background: #141616;
+  border-right: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 6px;
+}
+#albion-nexus .rail button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 10px;
+  border: 0;
+  background: none;
+  padding: 9px 3px;
+  width: 54px;
+  border-radius: 6px;
+  color: var(--muted);
+}
+#albion-nexus .rail button.active {
+  color: var(--gold);
+  background: #2d281a;
+}
+#albion-nexus .utility-main {
+  padding: 24px;
+  min-width: 0;
+}
+#albion-nexus .session-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 16px;
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+#albion-nexus .analysis-main {
+  padding: 23px;
+}
+#albion-nexus .analysis-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 20px;
+}
+#albion-nexus .inspector {
+  border-left: 1px solid var(--line);
+  padding-left: 20px;
+}
+#albion-nexus .inspector .weapon {
+  width: 42px;
+  height: 42px;
+  margin: 13px 0;
+}
+#albion-nexus .detail-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+#albion-nexus .chart {
+  margin: 16px 0 5px;
+  position: relative;
+  height: 135px;
+  border-bottom: 1px solid #40433d;
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  padding: 22px 10px 0;
+  background: repeating-linear-gradient(to top, transparent 0, transparent 31px, #252927 32px);
+}
+#albion-nexus .chart button {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: #a68a40;
+  padding: 0;
+  border-radius: 2px 2px 0 0;
+}
+#albion-nexus .chart button:hover,
+#albion-nexus .chart button:focus {
+  background: #efd58e;
+}
+#albion-nexus .chart-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 10px;
+  color: var(--muted);
+}
+#albion-nexus .axis {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+}
+#albion-nexus .readout {
+  font-size: 12px;
+  color: var(--gold);
+  margin: 10px 0;
+  min-height: 18px;
+}
+#albion-nexus .copy-fallback {
+  padding: 20px;
+}
+#albion-nexus textarea {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  color: var(--ink);
+  background: #1c201b;
+  border: 1px solid #777;
+  padding: 10px;
+}
+#albion-nexus .empty {
+  padding: 40px 15px;
+  text-align: center;
+  color: var(--muted);
+}
+#albion-nexus .setting {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+#albion-nexus .setting input {
+  accent-color: var(--gold);
+}
+#albion-nexus.compact td {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+@media (max-width: 760px) {
+  #albion-nexus .inspector {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+  }
+  #albion-nexus .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #albion-nexus .capture-status {
+    margin-left: 0;
+  }
+}
+@media (max-width: 440px) {
+  #albion-nexus .utility-layout {
+    grid-template-columns: 1fr;
+  }
+  #albion-nexus .rail {
+    flex-direction: row;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 5px 12px;
+    gap: 8px;
+  }
+  #albion-nexus .rail button {
+    width: auto;
+    flex: 1;
+    flex-direction: row;
+    justify-content: center;
+  }
+  #albion-nexus .stat b {
+    font-size: 20px;
+  }
+  #albion-nexus .app-header {
+    padding: 12px;
+  }
+  #albion-nexus .commands {
+    padding: 12px;
+  }
+}
+#albion-nexus {
+  container-type: inline-size;
+}
+#albion-nexus .utility-layout {
+  position: relative;
+  grid-template-columns: 156px minmax(0, 1fr);
+  min-height: 490px;
+}
+#albion-nexus .rail {
+  width: 156px;
+  align-items: stretch;
+  padding: 20px 10px;
+  gap: 10px;
+}
+#albion-nexus .rail button {
+  width: 100%;
+  min-height: 44px;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  font-size: 12px;
+  flex: none;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#albion-nexus .rail svg,
+#albion-nexus .rail i {
+  width: 18px;
+  min-width: 18px;
+  flex-shrink: 0;
+  text-align: center;
+}
+#albion-nexus .rail-label {
+  opacity: 1;
+  transition: opacity 0.14s ease;
+}
+#albion-nexus .utility-main {
+  min-width: 0;
+  padding: 23px;
+  container-type: inline-size;
+}
+#albion-nexus .analysis-grid {
+  grid-template-columns: minmax(0, 1fr) 205px;
+}
+#albion-nexus .basic-grid {
+  grid-template-columns: 1fr;
+}
+#albion-nexus .advanced-toggle {
+  font-size: 12px;
+  gap: 9px;
+  white-space: nowrap;
+}
+#albion-nexus .toggle-track {
+  display: flex;
+  align-items: center;
+  width: 25px;
+  height: 15px;
+  padding: 2px;
+  background: #4a4c45;
+  border-radius: 12px;
+}
+#albion-nexus .toggle-track span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #c2c5b9;
+  transition: transform 0.16s;
+}
+#albion-nexus .advanced-toggle.active .toggle-track {
+  background: #8c7034;
+}
+#albion-nexus .advanced-toggle.active .toggle-track span {
+  transform: translateX(10px);
+  background: #ffe2a0;
+}
+#albion-nexus .player-portrait {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  aspect-ratio: 1;
+  background: #282b25;
+  border: 1px solid #454b3e;
+  border-radius: 5px;
+  overflow: hidden;
+  color: #bac3aa;
+  font-size: 12px;
+}
+#albion-nexus .player-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+#albion-nexus .inspector .player-portrait {
+  width: 48px;
+  margin: 14px 0;
+  font-size: 18px;
+}
+#albion-nexus tr.selected td {
+  background-color: #26291f;
+}
+
+@container (max-width:800px) {
+  #albion-nexus .utility-layout {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+  #albion-nexus .rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 64px;
+    z-index: 5;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+    padding: 20px 8px;
+    gap: 10px;
+    transition:
+      width 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+  #albion-nexus .rail button {
+    padding: 10px 15px;
+    width: 100%;
+    flex: none;
+    justify-content: flex-start;
+  }
+  #albion-nexus .rail-label {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  #albion-nexus .utility-main {
+    grid-column: 2;
+    padding: 18px;
+  }
+}
+@container (max-width:690px) {
+  #albion-nexus .analysis-grid {
+    grid-template-columns: 1fr;
+  }
+  #albion-nexus .inspector {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+  }
+}
+@container (max-width:570px) {
+  #albion-nexus .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+#albion-nexus.preview-small {
+  max-width: 620px;
+  margin-inline: auto;
+}
+#albion-nexus.preview-small .utility-layout {
+  grid-template-columns: 64px minmax(0, 1fr);
+}
+#albion-nexus.preview-small .rail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 64px;
+  z-index: 5;
+  transition: width 0.18s ease;
+  flex-direction: column;
+  padding: 20px 8px;
+}
+#albion-nexus.preview-small .rail-label {
+  opacity: 0;
+  visibility: hidden;
+}
+#albion-nexus.preview-small .rail:hover,
+#albion-nexus.preview-small .rail:focus-within {
+  width: 176px;
+  box-shadow: 12px 0 25px #0005;
+}
+#albion-nexus.preview-small .rail:hover .rail-label,
+#albion-nexus.preview-small .rail:focus-within .rail-label {
+  opacity: 1;
+  visibility: visible;
+}
+#albion-nexus.preview-small .utility-main {
+  grid-column: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  #albion-nexus .rail,
+  #albion-nexus .rail-label,
+  #albion-nexus .toggle-track span {
+    transition: none;
+  }
+}
+
+#albion-nexus .player-breakdown {
+  min-width: 0;
+}
+#albion-nexus .global-skills {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+#albion-nexus .global-skills .heading {
+  margin-bottom: 10px;
+}
+#albion-nexus .skill-portrait {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #514934;
+  border-radius: 5px;
+  background: #28251c;
+  color: #d4bc84;
+  font-size: 11px;
+}
+#albion-nexus .skill-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+#albion-nexus .ability-table {
+  font-size: 12px;
+  border-spacing: 0 4px;
+}
+#albion-nexus .ability-table th {
+  white-space: normal;
+  font-size: 11px;
+  text-transform: none;
+  min-width: 80px;
+}
+#albion-nexus .ability-table th:first-child {
+  min-width: 0;
+  width: 48px;
+}
+#albion-nexus .ability-table td {
+  padding: 9px 10px;
+  background: #151918;
+}
+#albion-nexus .ability-table td:first-child {
+  min-width: 0;
+  width: 48px;
+  padding-right: 0;
+}
+#albion-nexus .ability-table td:nth-child(2),
+#albion-nexus .ability-table th:nth-child(2) {
+  text-align: left;
+  white-space: normal;
+  min-width: 130px;
+}
+#albion-nexus .ability-table td:last-child {
+  color: var(--ink);
+}
+#albion-nexus .hit-count {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+}
+#albion-nexus .skills-note,
+#albion-nexus .interval-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 12px 0;
+}
+#albion-nexus .skills-empty {
+  padding: 22px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+#albion-nexus .sr-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+#albion-nexus .average-caption {
+  margin-top: 5px;
+}
+#albion-nexus .death-count span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#albion-nexus .death-times {
+  color: var(--red);
+  font-size: 12px;
+  margin-top: 7px;
+}
+#albion-nexus .evolution {
+  margin-top: 14px;
+  padding-top: 3px;
+}
+#albion-nexus .evolution-plot {
+  position: relative;
+  margin: 0 16px 0 48px;
+  height: 178px;
+}
+#albion-nexus .dps-line {
+  position: absolute;
+  left: 0;
+  top: 28px;
+  width: 100%;
+  height: 150px;
+  overflow: visible;
+}
+#albion-nexus .evolution-grid {
+  stroke: #30352f;
+  stroke-width: 1;
+}
+#albion-nexus .evolution-area {
+  fill: #d2ae5610;
+}
+#albion-nexus .evolution-path {
+  stroke: var(--gold);
+  stroke-width: 2;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+#albion-nexus .y-labels span {
+  position: absolute;
+  right: calc(100% + 10px);
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+#albion-nexus .time-slice {
+  position: absolute;
+  top: 28px;
+  height: 150px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+#albion-nexus .time-slice:hover {
+  background: #d2ae5617;
+}
+#albion-nexus .time-slice.chosen {
+  background: #d2ae5629;
+  box-shadow:
+    inset 1px 0 #d2ae5666,
+    inset -1px 0 #d2ae5666;
+}
+#albion-nexus .death-mark {
+  position: absolute;
+  top: 0;
+  height: 178px;
+  border-left: 1px solid #ec665b;
+  pointer-events: none;
+}
+#albion-nexus .death-mark button {
+  position: absolute;
+  left: -14px;
+  top: 0;
+  width: 28px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  padding: 0;
+  background: #211614;
+  border: 0;
+  border-radius: 4px;
+  color: #ff8e7f;
+}
+#albion-nexus .death-mark button:hover {
+  background: #4c2520;
+}
+#albion-nexus .evolution-axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 16px 0 48px;
+  font-size: 11px;
+  color: var(--muted);
+}
+#albion-nexus .chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  margin: 14px 0;
+}
+#albion-nexus .chart-legend span,
+#albion-nexus .interval-totals span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#albion-nexus .legend-gold {
+  width: 16px;
+  height: 2px;
+  background: var(--gold);
+}
+#albion-nexus .interval-detail {
+  border-left: 2px solid var(--gold);
+  padding: 12px 16px;
+  background: #181b16;
+  margin: 18px 0;
+}
+#albion-nexus .interval-detail .heading {
+  margin-bottom: 12px;
+}
+#albion-nexus .interval-detail .tool {
+  font-size: 11px;
+}
+#albion-nexus .interval-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 12px;
+  margin: 10px 0 15px;
+  color: var(--muted);
+}
+#albion-nexus .interval-totals b {
+  color: var(--ink);
+  font-weight: 500;
+}
+@container (max-width:800px) {
+  #albion-nexus .rail:hover,
+  #albion-nexus .rail:focus-within {
+    width: 176px;
+    box-shadow: 12px 0 25px #0005;
+  }
+  #albion-nexus .rail:hover .rail-label,
+  #albion-nexus .rail:focus-within .rail-label {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+@media (pointer: coarse) {
+  #albion-nexus .death-mark button {
+    width: 36px;
+    height: 36px;
+    left: -18px;
+    top: -8px;
+  }
+}
+
+/* Ventana Electron: solo el panel central se desplaza. */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #0d0f0f;
+}
+#albion-nexus {
+  height: 100%;
+  color-scheme: dark;
+}
+#albion-nexus .app-window {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+}
+#albion-nexus .workspace {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+#albion-nexus .utility-layout {
+  height: 100%;
+  min-height: 0;
+}
+#albion-nexus .utility-main {
+  overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-color: #494b40 #151717;
+}
+#albion-nexus .commands {
+  flex-shrink: 0;
+  gap: 7px;
+  padding: 10px 14px;
+}
+#albion-nexus .boss-notice {
+  flex-shrink: 0;
+  padding: 7px 16px;
+}
+#albion-nexus .ui-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+#albion-nexus [data-icon] {
+  display: inline-flex;
+  align-items: center;
+}
+#albion-nexus .player-portrait,
+#albion-nexus .skill-portrait {
+  position: relative;
+  flex-shrink: 0;
+}
+#albion-nexus .player-portrait img,
+#albion-nexus .skill-portrait img {
+  position: absolute;
+  inset: 0;
+}
+#albion-nexus .player-portrait:has(img) .image-placeholder,
+#albion-nexus .skill-portrait:has(img) .image-placeholder {
+  visibility: hidden;
+}
+#albion-nexus .weapon-label {
+  display: block;
+  font-size: 11px;
+}
+#albion-nexus .player-name button {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+#albion-nexus .inspector h2 {
+  overflow-wrap: anywhere;
+}
+#albion-nexus #no-map-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+  padding: 24px;
+}
+#albion-nexus #no-map-screen h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #d3d1c8;
+  line-height: 1.5;
+}
+#albion-nexus #no-map-screen p {
+  color: #a4a79d;
+  font-size: 13px;
+}
+#albion-nexus .waiting-symbol {
+  font-size: 72px;
+  line-height: 1;
+  color: #d2ae5666;
+}
+#albion-nexus #feedback {
+  margin: 0;
+  padding: 8px 14px;
+  background: #24261e;
+  color: #dec889;
+  font-size: 12px;
+}
+#albion-nexus .copy-fallback {
+  max-height: 230px;
+  overflow: auto;
+}
+@container (max-width:760px) {
+  #albion-nexus .analysis-grid {
+    grid-template-columns: 1fr;
+  }
+  #albion-nexus .inspector {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+  }
+}

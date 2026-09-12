@@ -87,11 +87,16 @@ export class ViewController{
       });
 
       ipcMain.handle("get-players", (_event)=>{
-        return PARTY_CONTROLLER.membersInParty;
+        let result:Array<string> = [];
+        for(let i in PARTY_CONTROLLER.membersInParty){
+          let p = PARTY_CONTROLLER.membersInParty[i];
+          result.push(p.getName());
+        }
+        return result;
       })
 
       ipcMain.handle("get-localplayer", (_event)=>{
-        return ENTITY_CONTROLLER.localPlayer;
+        return ENTITY_CONTROLLER.localPlayer?.getName();
       })
 
       ipcMain.handle("get-program-timing", (_event)=>{
@@ -104,6 +109,14 @@ export class ViewController{
 
       ipcMain.on("pause", ()=>{
         ProgramTime.getInstance().pause();
+      });
+
+      ipcMain.on("is-boss-mode", ()=>{
+        return false;
+      });
+
+      ipcMain.on("is-map-loaded", ()=>{
+        return ProgramTime.getInstance().programStarted;
       });
 
       ipcMain.on("unpause", ()=>{

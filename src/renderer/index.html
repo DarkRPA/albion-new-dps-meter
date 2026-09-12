@@ -1,646 +1,128 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Albion DPS Meter</title>
-  <style>
-    :root {
-      --bg-root:    #0b0b0b;
-      --bg-card:    #111111;
-      --bg-row:     #161616;
-      --border:     #252525;
-      --accent:     #c9a227;
-      --accent-dim: #7a611a;
-      --text:       #e2e2e2;
-      --muted:      #666;
-      --heal-text:  #56c96e;
-      --heal-bg:    rgba(86,201,110,.08);
-      --heal-border:rgba(86,201,110,.28);
-      --bar-dmg:    rgba(201,162,39,.10);
-      --bar-heal:   rgba(86, 201, 111, 0.809);
-      --id-not-found-bg: rgba(214, 96, 52, 0.1);
-      --id-not-found-border: rgba(214, 96, 52, 0.28);
-
-      /* ── Tokens de Fama y Credi-fama ─────────────────── */
-      --fame:        #f04e3e;
-      --fame-bright: #ff5c47;
-      --credi-fame:  #f2c94c;
-      --credi-fame-bright: #ffd75e;
-
-      /* ── Tokens para Modo Boss ────────────────────── */
-      --boss-accent: #e05555;
-      --boss-accent-glow: rgba(224, 85, 85, 0.6);
-      --boss-bg:     rgba(224, 85, 85, 0.12);
-      --boss-border: rgba(224, 85, 85, 0.45);
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html, body {
-      height: 100%;
-      background: var(--bg-root);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      font-size: 13px;
-      overflow: hidden;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      position: relative;
-    }
-
-    /* ── Capa de Fondo y Ambiente para Modo Boss ─────────── */
-    #boss-bg-overlay {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 2;
-      opacity: 0;
-      transition: opacity .5s ease;
-      background: radial-gradient(ellipse at top, rgba(224, 55, 55, 0.18) 0%, transparent 75%);
-      box-shadow: inset 0 0 90px rgba(180, 20, 20, 0.45);
-    }
-
-    body.boss-mode-active #boss-bg-overlay {
-      opacity: 1;
-      animation: bossPulse 2.5s ease-in-out infinite alternate;
-    }
-
-    @keyframes bossPulse {
-      0% {
-        opacity: 0.7;
-        box-shadow: inset 0 0 60px rgba(224, 55, 55, 0.3);
-      }
-      100% {
-        opacity: 1;
-        box-shadow: inset 0 0 110px rgba(224, 55, 55, 0.65);
-      }
-    }
-
-    /* Modificadores globales en Modo Boss */
-    body.boss-mode-active #sec-stats {
-      border-bottom-color: var(--boss-border);
-    }
-    body.boss-mode-active .stat-box {
-      border-color: rgba(224, 85, 85, 0.35);
-      box-shadow: 0 0 10px rgba(224, 85, 85, 0.08);
-    }
-    body.boss-mode-active .sec-label {
-      color: var(--boss-accent);
-    }
-    body.boss-mode-active .sec-label::before {
-      background: var(--boss-accent);
-      box-shadow: 0 0 8px var(--boss-accent-glow);
-    }
-
-    /* ── Shared section label ─────────────────────────────── */
-    .sec-label {
-      font-size: 9.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.6px;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      margin-bottom: 10px;
-      transition: color .3s;
-    }
-    .sec-label::before {
-      content: '';
-      display: inline-block;
-      width: 3px;
-      height: 13px;
-      background: var(--accent);
-      border-radius: 2px;
-      flex-shrink: 0;
-      transition: background .3s, box-shadow .3s;
-    }
-
-    /* ── SECTION 1 · Stats ────────────────────────────────── */
-    #sec-stats {
-      position: relative;
-      z-index: 1;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 14px;
-      flex-shrink: 0;
-      transition: border-color .3s;
-    }
-
-    .stats-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    /* Banner destacado para Modo Boss */
-    .boss-banner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: linear-gradient(90deg, rgba(224, 85, 85, 0.25) 0%, rgba(120, 20, 20, 0.35) 100%);
-      border: 1px solid var(--boss-accent);
-      border-radius: 6px;
-      padding: 7px 12px;
-      margin-bottom: 10px;
-      box-shadow: 0 0 12px rgba(224, 85, 85, 0.25);
-      animation: fadeIn .2s ease-in-out;
-    }
-    .boss-banner.hidden { display: none; }
-
-    .boss-banner-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: .8px;
-      text-shadow: 0 0 6px var(--boss-accent);
-    }
-
-    .boss-icon {
-      width: 16px;
-      height: 16px;
-      fill: var(--boss-accent);
-      filter: drop-shadow(0 0 4px var(--boss-accent));
-    }
-
-    .boss-dot-pulse {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--boss-accent);
-      box-shadow: 0 0 8px var(--boss-accent);
-      animation: blink 0.8s infinite;
-    }
-
-    .boss-banner-sub {
-      font-size: 9.5px;
-      color: rgba(255, 255, 255, 0.7);
-      letter-spacing: .3px;
-      font-weight: 500;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    .stat-box {
-      background: var(--bg-row);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      padding: 9px 12px;
-      text-align: center;
-      transition: border-color .3s, box-shadow .3s;
-    }
-    .stat-box .lbl {
-      font-size: 9.5px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      margin-bottom: 5px;
-    }
-    .stat-box .val {
-      font-size: 21px;
-      font-weight: 800;
-      color: var(--accent);
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -.5px;
-      line-height: 1;
-    }
-    .stat-box .val.timer { color: var(--text); font-size: 19px; }
-
-    /* ── Fama (rojo in-game) ────────────────────────────── */
-    .stat-box .lbl.fame { color: var(--fame); }
-    .stat-box .val.fame { color: var(--fame-bright); }
-    .lbl-icon {
-      height: 12px;
-      width: auto;
-      vertical-align: -2px;
-    }
-
-    /* ── Credi-fama (amarillo) ──────────────────────────── */
-    .stat-box .lbl.credi { color: var(--credi-fame); }
-    .stat-box .val.credi { color: var(--credi-fame-bright); }
-
-    /* ── SECTION 2 · Players ──────────────────────────────── */
-    #sec-players {
-      position: relative;
-      z-index: 1;
-      flex: 1 1 auto;
-      overflow-y: auto;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .players-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .pill {
-      font-size: 9.5px;
-      background: var(--bg-row);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2px 9px;
-      color: var(--muted);
-    }
-
-    .col-head {
-      display: grid;
-      grid-template-columns: 68px 1fr 86px 40px 70px;
-      gap: 6px;
-      padding: 0 10px 5px;
-      font-size: 9.5px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .7px;
-    }
-    .col-head span:nth-child(n+3) { text-align: right; }
-
-    .player-rows { display: flex; flex-direction: column; gap: 3px; flex: 1; }
-
-    .p-row {
-      position: relative;
-      background: var(--bg-row);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
-      overflow: hidden;
-      transition: border-color .2s;
-    }
-    .p-row:hover { border-color: var(--accent-dim); }
-    .p-row.healer {
-      background: var(--heal-bg);
-      border-color: var(--heal-border);
-    }
-
-    .p-row.not-id {
-      background: var(--id-not-found-bg);
-      border-color: var(--id-not-found-border);
-    }
-
-    .bar {
-      position: absolute; inset: 0;
-      width: 0; height: 100%;
-      background: var(--bar-dmg);
-      transition: width .55s ease;
-      pointer-events: none;
-    }
-
-    .bar-heal {
-      position: absolute; inset: 0;
-      width: 0; height: 5%;
-      background: var(--bar-heal);
-      transition: width .55s ease;
-      pointer-events: none;
-    }
-
-    .p-row.healer .bar { background: var(--bar-heal); }
-
-    .p-inner {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 68px 1fr 86px 40px 70px;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .rank {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 800;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .rank-icon {
-      width: 64px;
-      height: 64px;
-      object-fit: contain;
-      flex-shrink: 0;
-    }
-
-    .r1 { color: #ffd700; }
-    .r2 { color: #b0b0b0; }
-    .r3 { color: #cd7f32; }
-
-    .pname {
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 13px;
-    }
-    .p-row.healer .pname { color: var(--heal-text); }
-
-    .heal-tag {
-      display: inline-flex;
-      background: rgba(86,201,110,.18);
-      color: var(--heal-text);
-      font-size: 8.5px;
-      font-weight: 700;
-      padding: 1px 5px;
-      border-radius: 8px;
-      letter-spacing: .4px;
-      text-transform: uppercase;
-      vertical-align: middle;
-      margin-left: 5px;
-    }
-
-    .pdmg {
-      text-align: right;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      font-size: 12px;
-    }
-    .p-row.healer .pdmg { color: var(--heal-text); }
-
-    .ppct {
-      text-align: right;
-      font-size: 10.5px;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .pdps {
-      text-align: right;
-      font-size: 10.5px;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* ── Estado: mapa no cargado ──────────────────────────── */
-    #no-map-screen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-root);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      z-index: 100;
-    }
-
-    .no-map-icon {
-      width: 64px;
-      height: 64px;
-      opacity: 0.18;
-    }
-
-    .no-map-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      text-align: center;
-      opacity: 0.55;
-      max-width: 260px;
-      line-height: 1.55;
-    }
-
-    .no-map-sub {
-      font-size: 10.5px;
-      color: var(--muted);
-      text-align: center;
-      max-width: 220px;
-      line-height: 1.6;
-    }
-
-    .no-map-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 5px 13px;
-      font-size: 10px;
-      color: var(--muted);
-      background: var(--bg-card);
-      margin-top: 4px;
-    }
-    .no-map-badge .dot-idle {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--muted);
-    }
-
-    /* ── SECTION 3 · Controls ─────────────────────────────── */
-    #sec-controls {
-      position: relative;
-      z-index: 1;
-      background: var(--bg-card);
-      border-top: 1px solid var(--border);
-      padding: 10px 14px;
-      flex-shrink: 0;
-    }
-
-    .ctrl-row {
-      display: flex;
-      gap: 7px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    button {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      border: none;
-      border-radius: 5px;
-      padding: 7px 13px;
-      font-size: 11.5px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .14s;
-      letter-spacing: .2px;
-    }
-
-    button:disabled {
-      background: #1a1a1a;
-      color: #555;
-      border-color: #222;
-      cursor: not-allowed;
-      opacity: .55;
-      box-shadow: none;
-      transform: none;
-    }
-    button:disabled:hover { border-color: #222; color: #555; transform: none; }
-    button:disabled:active { transform: none; }
-
-    .btn-reset {
-      background: var(--accent);
-      color: #0b0b0b;
-    }
-    .btn-reset:hover { background: #e4b82d; transform: translateY(-1px); }
-    .btn-reset:active { transform: translateY(0); }
-
-    .btn-ghost {
-      background: var(--bg-row);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-ghost:hover { border-color: var(--accent-dim); color: var(--accent); }
-    .btn-ghost.on  { border-color: #c04444; color: #e05555; }
-
-    /* Estilos del Botón Boss */
-    .btn-boss {
-      border-color: rgba(224, 85, 85, 0.4);
-      color: #e05555;
-    }
-    .btn-boss:hover {
-      background: rgba(224, 85, 85, 0.15);
-      border-color: var(--boss-accent);
-      color: #ff6b6b;
-    }
-    .btn-boss.active {
-      background: var(--boss-accent);
-      color: #ffffff;
-      border-color: #ff6b6b;
-      box-shadow: 0 0 12px rgba(224, 68, 68, 0.6);
-    }
-
-    .vdiv { width: 1px; height: 22px; background: var(--border); }
-
-    .status {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 9.5px;
-      color: var(--muted);
-    }
-    .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: #56c96e;
-      animation: blink 2s infinite;
-    }
-    .dot.off { background: #e05555; animation: none; }
-
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
-
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
-    ::-webkit-scrollbar-thumb:hover { background: #444; }
-  </style>
-</head>
-<body>
-
-<!-- Capa de gradiente y destello rojo para el fondo -->
-<div id="boss-bg-overlay"></div>
-
-<!-- ═══════════════════════════════════════════════════════
-     PANTALLA: MAPA NO CARGADO
-════════════════════════════════════════════════════════ -->
-<div id="no-map-screen">
-  <svg class="no-map-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 16L24 10L40 18L56 10V48L40 54L24 46L8 54V16Z"
-          stroke="#c9a227" stroke-width="3" stroke-linejoin="round" fill="none"/>
-    <line x1="24" y1="10" x2="24" y2="46" stroke="#c9a227" stroke-width="2" stroke-dasharray="4 3"/>
-    <line x1="40" y1="18" x2="40" y2="54" stroke="#c9a227" stroke-width="2" stroke-dasharray="4 3"/>
-    <line x1="4"  y1="32" x2="60" y2="32" stroke="#c04444" stroke-width="2.5" stroke-linecap="round"
-          transform="rotate(45 32 32)"/>
-  </svg>
-
-  <div class="no-map-title">El mapa no ha sido cargado aún,<br>cambia de mapa para comenzar</div>
-
-  <div class="no-map-sub">La sesión arrancará automáticamente<br>en cuanto entres a una zona</div>
-
-  <div class="no-map-badge">
-    <span class="dot-idle"></span>
-    Esperando zona…
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════
-     SECCIÓN 1 · Estadísticas de sesión
-════════════════════════════════════════════════════════ -->
-<section id="sec-stats">
-  <!-- Banner de advertencia visual para Modo Boss -->
-  <div class="boss-banner hidden" id="boss-banner">
-    <div class="boss-banner-info">
-      <svg class="boss-icon" viewBox="0 0 24 24">
-        <path d="M12 2C6.47 2 2 6.47 2 12c0 2.83 1.18 5.39 3.07 7.21L5.1 22h13.8l.03-2.79C20.82 17.39 22 14.83 22 12c0-5.53-4.47-10-10-10zm-3 8c.83 0 1.5.67 1.5 1.5S9.83 13 9 13s-1.5-.67-1.5-1.5S8.17 10 9 10zm6 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm-5.5 8v-2h7v2h-7z"/>
-      </svg>
-      <span class="boss-dot-pulse"></span>
-      <span>ENCOMBATE DE BOSS</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: http: data:; connect-src 'none'; object-src 'none'; base-uri 'self'"
+    />
+    <title>Albion DPS Meter</title>
+    <link rel="stylesheet" href="./assets/nexus.css" />
+  </head>
+  <body>
+    <div id="albion-nexus">
+      <section id="no-map-screen" role="status" aria-live="polite">
+        <span class="waiting-symbol" aria-hidden="true">◇</span>
+        <h1>El mapa no ha sido cargado aún,<br />cambia de mapa para comenzar</h1>
+        <p>La sesión arrancará automáticamente<br />en cuanto entres a una zona</p>
+        <span class="pill">Esperando zona…</span>
+        <p id="connection-error" hidden></p>
+      </section>
+      <div id="meter-app" class="app-window" hidden>
+        <div class="workspace">
+          <div class="utility-layout">
+            <nav class="rail" aria-label="Módulos">
+              <button
+                data-section="Combate"
+                class="active"
+                aria-label="Combate"
+                aria-pressed="true"
+              >
+                <span data-icon="swords"></span><span class="rail-label">Combate</span>
+              </button>
+              <button data-section="Ajustes" aria-label="Ajustes" aria-pressed="false">
+                <span data-icon="settings"></span><span class="rail-label">Ajustes</span>
+              </button>
+            </nav>
+            <main class="utility-main">
+              <section id="combat-view">
+                <div class="heading">
+                  <div>
+                    <span class="eyebrow">Sesión actual</span>
+                    <h2>Medidor de combate</h2>
+                  </div>
+                  <button class="tool advanced-toggle" data-action="advanced" aria-pressed="false">
+                    <span data-icon="chart"></span>Vista avanzada<span
+                      class="toggle-track"
+                      aria-hidden="true"
+                      ><span></span
+                    ></span>
+                  </button>
+                </div>
+                <div class="stats">
+                  <div class="stat"><label>TIEMPO DE SESIÓN</label><b id="el-timer">—</b></div>
+                  <div class="stat"><label>FAMA TOTAL</label><b id="el-fame" class="red">—</b></div>
+                  <div class="stat">
+                    <label>FAMA / HORA</label
+                    ><b class="red" aria-label="Fama por hora no disponible">—</b>
+                  </div>
+                  <div class="stat">
+                    <label>CREDIFAMA</label><b id="el-credit" class="gold">—</b>
+                  </div>
+                </div>
+                <div id="players-layout" class="analysis-grid basic-grid">
+                  <section>
+                    <div class="heading">
+                      <h3>Jugadores <span id="el-count" class="muted small"></span></h3>
+                      <div class="switches" aria-label="Métrica">
+                        <button data-metric="damage" class="active" aria-pressed="true">Daño</button
+                        ><button data-metric="healing" aria-pressed="false">Curación</button>
+                      </div>
+                    </div>
+                    <div id="players-table"></div>
+                    <div class="session-strip">
+                      <span>Curación del grupo <span id="total-healing" class="green">—</span></span
+                      ><span>Daño del grupo <span id="total-damage" class="gold">—</span></span>
+                    </div>
+                  </section>
+                  <aside id="player-inspector" class="inspector" hidden></aside>
+                </div>
+                <section id="player-breakdown" class="player-breakdown" hidden></section>
+              </section>
+              <section id="settings-view" hidden>
+                <div class="heading">
+                  <div>
+                    <span class="eyebrow">Ajustes</span>
+                    <h2>Tu espacio</h2>
+                  </div>
+                </div>
+                <label class="setting"
+                  ><span
+                    >Filas compactas<small class="muted" style="display: block"
+                      >Más jugadores en el mismo espacio</small
+                    ></span
+                  ><input type="checkbox" id="compact-rows"
+                /></label>
+              </section>
+            </main>
+          </div>
+        </div>
+        <div class="boss-notice" id="boss-banner" hidden>Modo Boss activo</div>
+        <footer class="commands">
+          <button data-action="reset"><span data-icon="reset"></span>Reiniciar</button>
+          <button data-action="boss" aria-pressed="false">
+            <span data-icon="skull"></span>Modo Boss
+          </button>
+          <button data-action="pause">
+            <span data-icon="pause"></span><span id="pause-label">Pausar</span>
+          </button>
+          <button data-action="copy"><span data-icon="copy"></span>Copiar</button>
+          <span class="capture-status" id="el-status" role="status"></span>
+        </footer>
+        <p id="feedback" role="status" aria-live="polite" hidden></p>
+        <div class="copy-fallback" id="copy-fallback" hidden>
+          <label
+            >Selecciona y copia el resumen<textarea
+              id="copy-text"
+              readonly
+              rows="5"
+            ></textarea></label
+          ><button class="tool" data-action="close-copy">Cerrar</button>
+        </div>
+      </div>
     </div>
-    <div class="boss-banner-sub">Snapshot activo · DPS separado</div>
-  </div>
-
-  <div class="stats-header">
-    <div class="sec-label">Sesión activa</div>
-  </div>
-
-  <div class="stats-grid">
-    <div class="stat-box">
-      <div class="lbl">⏱ Tiempo</div>
-      <div class="val timer" id="el-timer">00:00:00</div>
-    </div>
-    <div class="stat-box">
-      <div class="lbl fame"><img class="lbl-icon" src="./assets/fame-icon.png" alt="fama" /> Fama total</div>
-      <div class="val fame" id="el-fame">0</div>
-    </div>
-    <div class="stat-box">
-      <div class="lbl fame">📈 Fama/hora</div>
-      <div class="val fame" id="el-fph">0</div>
-    </div>
-    <div class="stat-box">
-      <div class="lbl credi"><img class="lbl-icon" src="./assets/fame-icon-yellow.png" alt="credi-fama" /> Credi-fama total</div>
-      <div class="val credi" id="el-credi-fame">0</div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════
-     SECCIÓN 2 · Lista de jugadores
-════════════════════════════════════════════════════════ -->
-<section id="sec-players">
-  <div class="players-header">
-    <div class="sec-label" style="margin-bottom:0">Jugadores</div>
-    <div class="pill" id="el-count">0 jugadores</div>
-  </div>
-  <div class="col-head">
-    <span>#</span><span>Nombre</span>
-    <span>Daño total</span><span>%</span><span>DPS</span>
-  </div>
-  <div class="player-rows" id="el-rows"></div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════
-     SECCIÓN 3 · Controles
-════════════════════════════════════════════════════════ -->
-<section id="sec-controls">
-  <div class="sec-label">Controles</div>
-  <div class="ctrl-row">
-    <button class="btn-reset" id="reset-button">↺ Reiniciar</button>
-    <button class="btn-ghost btn-boss" id="btn-boss">👹 Modo Boss</button>
-    <button class="btn-ghost" id="btn-pause">⏸ Pausar</button>
-    <div class="vdiv"></div>
-    <button class="btn-ghost" id="btn-copiar">📋 Copiar</button>
-    <div class="status">
-      <div class="dot off" id="el-dot"></div>
-      <span id="el-status">Esperando mapa</span>
-    </div>
-  </div>
-</section>
-
-<script type="module" src="./src/renderer.js"></script>
-</body>
+    <script type="module" src="./src/renderer.js"></script>
+    <script type="module" src="./src/data-controller.mjs"></script>
+  </body>
 </html>

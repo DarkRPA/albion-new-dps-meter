@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { Clonable } from "../Clonable";
-import ITEMS from "./static/items.json";
+import ITEMS from "../static/items.json";
 
 /**
  * Icono predeterminado en caso de que no haya cargado el render del item
