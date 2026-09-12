@@ -188,7 +188,7 @@ function route(contexto: any) {
     case 235:
       //->
       //Sale player
-      console.log(235, params);
+      //console.log(235, params);
       leaveParty(params)
       break
     case 90:

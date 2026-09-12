@@ -122,8 +122,33 @@ function emptyResource(resource, text) {
   return `<p class="skills-empty">${esc(message)}</p>`
 }
 
+// Orden y aporte visual calculados con los últimos totales recibidos de main.
+// Los jugadores sin datos quedan al final y muestran un aporte no disponible.
+// Main representa la curación con signo negativo. Solo para mostrarla usamos
+// su magnitud; la caché y los valores originales del back-end no se modifican.
+const healingMagnitude = (value) => finite(value) ? Math.abs(value) : null
+
+function rankedPlayers() {
+  const players = roster().map((name) => {
+    const stats = valueFor('damage', name)
+    const amount = metric === 'healing' ? healingMagnitude(stats?.healing) : stats?.damage
+    const rate = metric === 'healing' ? healingMagnitude(stats?.hps) : stats?.dps
+    return { name, stats, amount: finite(amount) ? amount : null, rate }
+  })
+  const total = players.reduce((sum, player) => sum + (player.amount ?? 0), 0)
+  players.sort((a, b) => {
+    if (a.amount === null) return b.amount === null ? 0 : 1
+    if (b.amount === null) return -1
+    return b.amount - a.amount
+  })
+  return players.map((player) => ({
+    ...player,
+    share: player.amount === null ? undefined : total > 0 ? (player.amount / total) * 100 : 0
+  }))
+}
+
 function playerTable(ui) {
-  const players = roster()
+  const players = rankedPlayers()
   if (!players.length) {
     return data.status('players') === 'ready'
       ? '<p class="skills-empty">Esperando jugadores…</p>'
@@ -131,16 +156,14 @@ function playerTable(ui) {
   }
   const local = data.read('localPlayer')
   return `<div class="table-scroll"><table aria-label="Estadísticas del grupo"><thead><tr><th>JUGADOR / ARMA</th><th>${metric === 'damage' ? 'DAÑO' : 'CURACIÓN'}</th><th>APORTE</th><th>${metric === 'damage' ? 'DPS' : 'HPS'}</th></tr></thead><tbody>${players
-    .map((name) => {
-      const stats = valueFor('damage', name)
-      const share = metric === 'damage' ? stats?.damageSharePercent : stats?.healingSharePercent
+    .map(({ name, stats, amount, rate, share }) => {
       const bar = metric === 'damage' ? stats?.damageBarPercent : stats?.healingBarPercent
       const button = ui.advanced ? 'button' : 'span'
       const attrs = ui.advanced
         ? `data-player="${esc(name)}" aria-pressed="${ui.player === name}"`
         : ''
       const weapon = stats?.weaponName
-      return `<tr class="${ui.advanced && ui.player === name ? 'selected' : ''}"><td>${finite(bar) ? `<span class="damage-bar" style="width:${Math.max(0, Math.min(100, bar))}%"></span>` : ''}<div class="player-name">${png(stats?.weaponImage, `Arma de ${name}`, name.slice(0, 2).toUpperCase())}<${button} ${attrs}>${esc(name)}${name === local ? '<span class="muted small"> · Tú</span>' : ''}${ui.advanced && weapon ? `<small class="weapon-label muted">${esc(weapon)}</small>` : ''}</${button}></div></td><td>${fmt(stats?.[metric])}</td><td class="muted">${percent(share)}</td><td>${fmt(metric === 'damage' ? stats?.dps : stats?.hps)}${finite(metric === 'damage' ? stats?.dps : stats?.hps) ? '/s' : ''}</td></tr>`
+      return `<tr class="${ui.advanced && ui.player === name ? 'selected' : ''}"><td>${finite(bar) ? `<span class="damage-bar" style="width:${Math.max(0, Math.min(100, bar))}%"></span>` : ''}<div class="player-name">${png(stats?.weaponImage, `Arma de ${name}`, name.slice(0, 2).toUpperCase())}<${button} ${attrs}>${esc(name)}${name === local ? '<span class="muted small"> · Tú</span>' : ''}${ui.advanced && weapon ? `<small class="weapon-label muted">${esc(weapon)}</small>` : ''}</${button}></div></td><td>${fmt(amount)}</td><td class="muted">${percent(share)}</td><td>${fmt(rate)}${finite(rate) ? '/s' : ''}</td></tr>`
     })
     .join('')}</tbody></table></div>`
 }
@@ -149,7 +172,7 @@ function inspector(ui) {
   if (!ui.player) return '<p class="skills-empty">Selecciona un jugador.</p>'
   const p = valueFor('damage', ui.player)
   const deaths = valueFor('deaths', ui.player)
-  return `<span class="eyebrow">Detalle del jugador</span>${png(p?.weaponImage, `Arma de ${ui.player}`, ui.player.slice(0, 2).toUpperCase())}<h2>${esc(ui.player)}</h2>${p?.weaponName ? `<p class="muted small">${esc(p.weaponName)}</p>` : ''}<div class="detail-stat"><span>Daño infligido</span><strong class="gold">${fmt(p?.damage)}</strong></div><div class="detail-stat"><span>Curación total</span><strong class="green">${fmt(p?.healing)}</strong></div><div class="detail-stat"><span>DPS promedio</span><strong>${exact(p?.dps)}</strong></div><div class="detail-stat death-count"><span>${icon('skull')}Muertes</span><strong class="red">${exact(deaths?.length)}</strong></div>${deaths ? `<p class="death-times">${deaths.length ? deaths.map((d) => clock(d.timestamp)).join(' · ') : 'Sin muertes registradas'}</p>` : '<p class="muted small">Datos de muertes no disponibles.</p>'}`
+  return `<span class="eyebrow">Detalle del jugador</span>${png(p?.weaponImage, `Arma de ${ui.player}`, ui.player.slice(0, 2).toUpperCase())}<h2>${esc(ui.player)}</h2>${p?.weaponName ? `<p class="muted small">${esc(p.weaponName)}</p>` : ''}<div class="detail-stat"><span>Daño infligido</span><strong class="gold">${fmt(p?.damage)}</strong></div><div class="detail-stat"><span>Curación total</span><strong class="green">${fmt(healingMagnitude(p?.healing))}</strong></div><div class="detail-stat"><span>DPS promedio</span><strong>${exact(p?.dps)}</strong></div><div class="detail-stat death-count"><span>${icon('skull')}Muertes</span><strong class="red">${exact(deaths?.length)}</strong></div>${deaths ? `<p class="death-times">${deaths.length ? deaths.map((d) => clock(d.timestamp)).join(' · ') : 'Sin muertes registradas'}</p>` : '<p class="muted small">Datos de muertes no disponibles.</p>'}`
 }
 
 function abilityTable(result, resource) {
@@ -315,12 +338,11 @@ function render() {
 
 async function copyData() {
   const text =
-    'Jugador | Daño | DPS | Aporte\n' +
-    roster()
-      .map((name) => {
-        const stats = valueFor('damage', name)
-        return `${name} | ${exact(stats?.damage)} | ${exact(stats?.dps)} | ${percent(stats?.damageSharePercent)}`
-      })
+    `Jugador | ${metric === 'damage' ? 'Daño | DPS' : 'Curación | HPS'} | Aporte\n` +
+    rankedPlayers()
+      .map(({ name, amount, rate, share }) =>
+        `${name} | ${exact(amount)} | ${exact(rate)} | ${percent(share)}`
+      )
       .join('\n')
   try {
     await navigator.clipboard.writeText(text)
