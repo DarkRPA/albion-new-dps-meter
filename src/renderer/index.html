@@ -99,13 +99,17 @@
                     <h2>Tu espacio</h2>
                   </div>
                 </div>
-                <label class="setting"
-                  ><span
-                    >Filas compactas<small class="muted" style="display: block"
-                      >Más jugadores en el mismo espacio</small
-                    ></span
-                  ><input type="checkbox" id="compact-rows"
-                /></label>
+                <label class="setting" for="row-size">
+                  <span>
+                    Tamaño de filas de jugadores
+                    <small class="muted">Ajusta el espacio vertical del medidor</small>
+                  </span>
+                  <select id="row-size" aria-label="Tamaño de filas de jugadores">
+                    <option value="compact">Compactas</option>
+                    <option value="normal">Normales</option>
+                    <option value="large">Grandes</option>
+                  </select>
+                </label>
                 <section class="accent-settings" aria-labelledby="accent-title">
                   <h3 id="accent-title">Color de acentuación</h3>
                   <p class="muted">Personaliza los botones, las selecciones y el gráfico. Se guarda en este equipo.</p>

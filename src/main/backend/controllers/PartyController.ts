@@ -57,7 +57,7 @@ export class PartyController implements Clonable<PartyController>{
         const playerInParty:Array<Player> = this.getPartyMemberFromName(rawPlayer.getName());
         if(playerInParty.length == 0) return;
         const player:Player = playerInParty[0];
-
+        
         //Actualizamos sus datos
         player.setWorldMap(rawPlayer.getWorldMap());
         player.setWorldId(rawPlayer.getWorldId());

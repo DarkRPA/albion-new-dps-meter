@@ -123,7 +123,7 @@ export class ViewController{
             if(!result[spellUsed.uniqueName]){
               result[spellUsed.uniqueName] = {
                 "localization": spellUsed.spellLocalizations.getTranslation(),
-                "urlIcon": "https://render.albiononline.com/v1/spell/"+spellUsed.uniqueName.split("_")[0],
+                "urlIcon": spellUsed.spellIcon,
                 "ticks": 0,
                 "damage": 0
               }

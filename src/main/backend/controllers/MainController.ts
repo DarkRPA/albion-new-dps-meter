@@ -126,6 +126,7 @@ function enterToParty(parametros: any): void {
  */
 export function reloadEverything(shallow:boolean = false):void{
   //Si es shallow, significa que solo borraremos los daños, lo demás lo dejaremos intacto
+  //console.log("REINICIA TODO");
   if(shallow){
     PARTY_CONTROLLER.restartDamage();
     return;
@@ -172,6 +173,7 @@ function route(contexto: any) {
       break;
     case 231:
       //->
+      //console.log("JUGADOR LOCAL ENTRA PARTY")
       enterToParty(params)
       break
     // case 237:
@@ -180,15 +182,20 @@ function route(contexto: any) {
     // case 230:
     //   leaveParty([0, NetworkListerner.playerList[0].guid]);
     //   break;
+    case 232:
+      //console.log("Party disbandeada");
+      partyDisbanded();
+      break;
     case 233:
       //->
       //Entra player party
+      //console.log("ENTRA PARTY", params);
       playerJoinParty(params)
       break
     case 235:
       //->
       //Sale player
-      //console.log(235, params);
+      //console.log("SALE PARTY", params);
       leaveParty(params)
       break
     case 90:
@@ -332,6 +339,13 @@ function hitEnemy(causante:number, damage:number, spellId:number): void {
   //player.addDamage(damage*-1);
 }
 
+/**
+ * Metodo encargado de gestionar el evento partyDisbanded
+ * y de eliminar a todos los miembros de la party pues en principio ya no estamos en ninguna party
+ */
+function partyDisbanded(){
+  PARTY_CONTROLLER.membersInParty = [];
+}
 
 /**
  * Funcion de Evento encargada de gestionar el evento de Albion Online con número 82, obtención de fama
@@ -393,6 +407,7 @@ function onMapChange(params: any) {
   localPlayer.inventory.updateEquipment(convertedEquipment);
 
   instance.sendMapChanged();
+  //console.log("CAMBIO MAPA");
 }
 
 function onDeath(params:any){

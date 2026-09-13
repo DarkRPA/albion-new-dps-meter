@@ -172,7 +172,7 @@ function inspector(ui) {
   if (!ui.player) return '<p class="skills-empty">Selecciona un jugador.</p>'
   const p = valueFor('damage', ui.player)
   const deaths = valueFor('deaths', ui.player)
-  return `<span class="eyebrow">Detalle del jugador</span>${png(p?.weaponImage, `Arma de ${ui.player}`, ui.player.slice(0, 2).toUpperCase())}<h2>${esc(ui.player)}</h2>${p?.weaponName ? `<p class="muted small">${esc(p.weaponName)}</p>` : ''}<div class="detail-stat"><span>Daño infligido</span><strong class="gold">${fmt(p?.damage)}</strong></div><div class="detail-stat"><span>Curación total</span><strong class="green">${fmt(healingMagnitude(p?.healing))}</strong></div><div class="detail-stat"><span>DPS promedio</span><strong>${exact(p?.dps)}</strong></div><div class="detail-stat death-count"><span>${icon('skull')}Muertes</span><strong class="red">${exact(deaths?.length)}</strong></div>${deaths ? `<p class="death-times">${deaths.length ? deaths.map((d) => clock(d.timestamp)).join(' · ') : 'Sin muertes registradas'}</p>` : '<p class="muted small">Datos de muertes no disponibles.</p>'}`
+  return `<span class="eyebrow">Detalle del jugador</span>${png(p?.weaponImage, `Arma de ${ui.player}`, ui.player.slice(0, 2).toUpperCase())}<h2>${esc(ui.player)}</h2>${p?.weaponName ? `<p class="muted small">${esc(p.weaponName)}</p>` : ''}<div class="detail-stat"><span>Daño infligido</span><strong class="gold">${fmt(p?.damage)}</strong></div><div class="detail-stat"><span>Curación total</span><strong class="green">${fmt(healingMagnitude(p?.healing))}</strong></div><div class="detail-stat"><span>DPS promedio</span><strong>${exact(p?.dps)}</strong></div><div class="detail-stat death-count"><span>Muertes</span><strong class="red">${exact(deaths?.length)}</strong></div>${deaths ? `<p class="death-times">${deaths.length ? deaths.map((d) => clock(d.timestamp)).join(' · ') : 'Sin muertes registradas'}</p>` : '<p class="muted small">Datos de muertes no disponibles.</p>'}`
 }
 
 function abilityTable(result, resource) {
@@ -461,9 +461,23 @@ try { savedAccent = localStorage.getItem(accentStorageKey) || defaultAccent } ca
 applyAccent(/^#[0-9a-f]{6}$/i.test(savedAccent) ? savedAccent : defaultAccent, false)
 scheduleRender()
 
-node('compact-rows').addEventListener('change', (event) =>
-  root.classList.toggle('compact', event.target.checked)
-)
+// Preferencia visual local: solo cambia el alto de las filas de jugadores.
+// Se valida al leer y escribir para que un valor corrupto no rompa la interfaz.
+const defaultRowSize = 'normal'
+const rowSizeStorageKey = 'albion-nexus-row-size'
+const rowSizes = new Set(['compact', 'normal', 'large'])
+function applyRowSize(size, persist = true) {
+  const value = rowSizes.has(size) ? size : defaultRowSize
+  root.dataset.rowSize = value
+  node('row-size').value = value
+  if (persist) {
+    try { localStorage.setItem(rowSizeStorageKey, value) } catch { /* Preferencia disponible durante esta sesión. */ }
+  }
+}
+let savedRowSize = defaultRowSize
+try { savedRowSize = localStorage.getItem(rowSizeStorageKey) || defaultRowSize } catch { /* Usar el tamaño inicial. */ }
+applyRowSize(savedRowSize, false)
+node('row-size').addEventListener('change', (event) => applyRowSize(event.target.value))
 root.addEventListener(
   'error',
   (event) => {

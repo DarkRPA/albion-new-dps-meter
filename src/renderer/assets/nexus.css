@@ -446,12 +446,36 @@
   padding: 20px 0;
   border-bottom: 1px solid var(--line);
 }
-#albion-nexus .setting input {
+#albion-nexus .setting > span {
+  min-width: 0;
+}
+#albion-nexus .setting small {
+  display: block;
+  margin-top: 2px;
+}
+#albion-nexus .setting input,
+#albion-nexus .setting select {
   accent-color: var(--gold);
 }
-#albion-nexus.compact td {
+#albion-nexus .setting select {
+  min-width: 128px;
+  padding: 8px 28px 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #1c201b;
+  color: var(--ink);
+}
+#albion-nexus[data-row-size='compact'] #players-table td {
   padding-top: 6px;
   padding-bottom: 6px;
+}
+#albion-nexus[data-row-size='normal'] #players-table td {
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+#albion-nexus[data-row-size='large'] #players-table td {
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
 @media (max-width: 760px) {
   #albion-nexus .inspector {
@@ -528,6 +552,12 @@
   flex-shrink: 0;
   text-align: center;
 }
+#albion-nexus .rail [data-icon] {
+  flex: 0 0 18px;
+}
+#albion-nexus .rail [data-icon='swords'] {
+  transform: translateX(-2px);
+}
 #albion-nexus .rail-label {
   opacity: 1;
   transition: opacity 0.14s ease;
@@ -575,7 +605,7 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 32px;
+  width: 36px;
   aspect-ratio: 1;
   background: #282b25;
   border: 1px solid #454b3e;
@@ -591,7 +621,7 @@
   object-fit: contain;
 }
 #albion-nexus .inspector .player-portrait {
-  width: 48px;
+  width: 50px;
   margin: 14px 0;
   font-size: 18px;
 }
