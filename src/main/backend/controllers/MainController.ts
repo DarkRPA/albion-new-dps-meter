@@ -71,7 +71,7 @@ function onLocalPlayerUpdate(context: any): void {
   if (context.operationCode == 1) {
     let params = context.parameters
     let code = params.get(253);
-    //console.log(params);
+    console.log(params);
     switch (code) {
       case 2:
         //TODO: Sacar y registrar más información como por ejemplo el mapa al que ha zoneado.
@@ -126,7 +126,7 @@ function enterToParty(parametros: any): void {
  */
 export function reloadEverything(shallow:boolean = false):void{
   //Si es shallow, significa que solo borraremos los daños, lo demás lo dejaremos intacto
-  //console.log("REINICIA TODO");
+  console.log("REINICIA TODO");
   if(shallow){
     PARTY_CONTROLLER.restartDamage();
     return;
@@ -147,7 +147,7 @@ function route(contexto: any) {
   let params = contexto.parameters
 
   if (contexto.code == 3) return
-  //console.log(params);
+  console.log(params);
   switch (params.get(252)) {
     // case 11:
     //   //BUFFO DEBUFFO ETC
@@ -169,11 +169,11 @@ function route(contexto: any) {
     //   console.log(params);
     //   break;
     case 278:
-      //console.log(params);
+      console.log(params);
       break;
     case 231:
       //->
-      //console.log("JUGADOR LOCAL ENTRA PARTY")
+      console.log("JUGADOR LOCAL ENTRA PARTY")
       enterToParty(params)
       break
     // case 237:
@@ -183,19 +183,19 @@ function route(contexto: any) {
     //   leaveParty([0, NetworkListerner.playerList[0].guid]);
     //   break;
     case 232:
-      //console.log("Party disbandeada");
+      console.log("Party disbandeada");
       partyDisbanded();
       break;
     case 233:
       //->
       //Entra player party
-      //console.log("ENTRA PARTY", params);
+      console.log("ENTRA PARTY", params);
       playerJoinParty(params)
       break
     case 235:
       //->
       //Sale player
-      //console.log("SALE PARTY", params);
+      console.log("SALE PARTY", params);
       leaveParty(params)
       break
     case 90:
@@ -207,7 +207,7 @@ function route(contexto: any) {
       player.inventory.updateEquipment(params.get(2));
       break;
     case 6:
-      //console.log(params);
+      console.log(params);
       //Golpea enemigo
       let causante = params.get(6);
       let spellId = params.get(7);
@@ -215,7 +215,7 @@ function route(contexto: any) {
       hitEnemy(causante, dano, spellId);
       break
     case 7:
-      //console.log("TEST: ", params);
+      console.log("TEST: ", params);
       let causantes:Array<number> = params.get(6);
       for(let i = 0; i < causantes.length; i++){
         hitEnemy(causantes[i], params.get(2)[i], params.get(7)[i]);
@@ -224,13 +224,13 @@ function route(contexto: any) {
     case 82:
       //Obtenemos fama
       obtainFame(params)
-      //console.log()
+      console.log()
       break
     case 84:
       obtainCrediFame(params);
       break;
     case 29:
-      let rawPlayer:RawPlayer = new RawPlayer(params.get(0), PARTY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1), Guid.PLACEHOLDER_GUID);
+      let rawPlayer:RawPlayer = new RawPlayer(params.get(0), PARTY_CONTROLLER.localPlayer?.getWorldMap() || "", params.get(1), new Guid(params.get(7)));
       rawPlayer.inventory.updateEquipment(params.get(40));
       ENTITY_CONTROLLER.addRawPlayer(rawPlayer);
 
@@ -407,7 +407,7 @@ function onMapChange(params: any) {
   localPlayer.inventory.updateEquipment(convertedEquipment);
 
   instance.sendMapChanged();
-  //console.log("CAMBIO MAPA");
+  console.log("CAMBIO MAPA");
 }
 
 function onDeath(params:any){

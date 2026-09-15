@@ -54,8 +54,12 @@ export class PartyController implements Clonable<PartyController>{
      */
     public updatePlayerFromRawData(rawPlayer:RawPlayer):void{
         //Comprobamos que el player realmente está en la party
-        const playerInParty:Array<Player> = this.getPartyMemberFromName(rawPlayer.getName());
-        if(playerInParty.length == 0) return;
+        let playerInParty:Array<Player> = this.getPartyMemberFromName(rawPlayer.getName());
+        if(playerInParty.length == 0) {
+            //Probamos con el GUID
+            playerInParty = [this.getPlayerFromGuid(rawPlayer.getGuid())!];
+            if(playerInParty.length == 0 || !(playerInParty[0])) return;
+        };
         const player:Player = playerInParty[0];
         
         //Actualizamos sus datos

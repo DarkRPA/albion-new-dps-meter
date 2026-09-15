@@ -26,6 +26,12 @@ const clock = (ms) => {
     .map((n) => String(n).padStart(2, '0'))
     .join(':')
 }
+// El tiempo de sesión llega en milisegundos; normalizarlo a una hora permite
+// calcular la tasa sin pedir un valor adicional al back-end.
+const famePerHour = (fame, elapsedMs) =>
+  finite(fame) && finite(elapsedMs) && elapsedMs > 0
+    ? (fame * 3_600_000) / elapsedMs
+    : null
 const esc = (value) =>
   String(value ?? '').replace(
     /[&<>"']/g,
@@ -295,8 +301,11 @@ function render() {
   node('player-inspector').hidden = !ui.advanced
   node('player-breakdown').hidden = !ui.advanced
   if (ui.section === 'Combate' && ui.mapReady) {
-    node('el-timer').textContent = clock(data.read('time'))
-    node('el-fame').textContent = fmt(data.read('fame'))
+    const elapsedMs = data.read('time')
+    const totalFame = data.read('fame')
+    node('el-timer').textContent = clock(elapsedMs)
+    node('el-fame').textContent = fmt(totalFame)
+    node('el-fame-per-hour').textContent = fmt(famePerHour(totalFame, elapsedMs))
     node('el-credit').textContent = fmt(data.read('creditFame'))
     node('el-count').textContent = roster().length ? `/ ${roster().length} jugadores` : ''
     put('players-table', playerTable(ui))
