@@ -169,7 +169,11 @@ function playerTable(ui) {
         ? `data-player="${esc(name)}" aria-pressed="${ui.player === name}"`
         : ''
       const weapon = stats?.weaponName
-      return `<tr class="${ui.advanced && ui.player === name ? 'selected' : ''}"><td>${finite(bar) ? `<span class="damage-bar" style="width:${Math.max(0, Math.min(100, bar))}%"></span>` : ''}<div class="player-name">${png(stats?.weaponImage, `Arma de ${name}`, name.slice(0, 2).toUpperCase())}<${button} ${attrs}>${esc(name)}${name === local ? '<span class="muted small"> · Tú</span>' : ''}${ui.advanced && weapon ? `<small class="weapon-label muted">${esc(weapon)}</small>` : ''}</${button}></div></td><td>${fmt(amount)}</td><td class="muted">${percent(share)}</td><td>${fmt(rate)}${finite(rate) ? '/s' : ''}</td></tr>`
+      const missingMapId = name !== local && stats && !stats.idFound
+      const mapWarning = missingMapId
+        ? '<span class="player-warning" role="img" aria-label="El jugador no está en tu mapa actual" title="El jugador no está en tu mapa actual">' + icon('warning') + '</span>'
+        : ''
+      return `<tr class="${ui.advanced && ui.player === name ? 'selected' : ''}"><td>${finite(bar) ? `<span class="damage-bar" style="width:${Math.max(0, Math.min(100, bar))}%"></span>` : ''}<div class="player-name">${png(stats?.weaponImage, `Arma de ${name}`, name.slice(0, 2).toUpperCase())}<${button} ${attrs}>${esc(name)}${mapWarning}${name === local ? '<span class="muted small"> · Tú</span>' : ''}${ui.advanced && weapon ? `<small class="weapon-label muted">${esc(weapon)}</small>` : ''}</${button}></div></td><td>${fmt(amount)}</td><td class="muted">${percent(share)}</td><td>${fmt(rate)}${finite(rate) ? '/s' : ''}</td></tr>`
     })
     .join('')}</tbody></table></div>`
 }

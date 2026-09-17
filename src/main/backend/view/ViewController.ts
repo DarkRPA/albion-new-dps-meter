@@ -8,7 +8,7 @@ import { BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import { ENTITY_CONTROLLER, PARTY_CONTROLLER, reloadEverything, SNAPSHOT_CONTROLLER, STATISTIC_CONTROLLER } from "../controllers/MainController";
 import { Player } from "../models/entities/Player";
-import { version } from "../../../../package.json";
+import { APP_VERSION } from "../../index";
 import { ProgramTime } from "../models/ProgramTime";
 import { Shard } from "../models/damage/Shard";
 import { DamagePacket } from "../models/damage/DamagePacket";
@@ -35,7 +35,7 @@ export class ViewController{
         this.baseWindow.setMenu(null);
         this.baseWindow.on("ready-to-show", ()=>{
           this.baseWindow.show();
-          this.baseWindow.title = `Albion New Dps Meter - V${version}`;
+          this.baseWindow.title = `Albion New Dps Meter - V${APP_VERSION}`;
         });
         this.baseWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
 

@@ -3,10 +3,12 @@
 import { NetworkListerner } from './backend/controllers/MainController.js'
 import { ViewController } from './backend/view/ViewController.js'
 import { app } from 'electron'
+import { version } from "../../package.json";
 
 
 //Clase principal, encargada de gestionar el arranque de la aplicacion
 export class Main {}
+export const APP_VERSION = version;
 
 //Deshabilitamos todas la caracteristicas que no son necesarias
 app.disableHardwareAcceleration();

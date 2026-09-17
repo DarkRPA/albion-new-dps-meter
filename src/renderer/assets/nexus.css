@@ -231,6 +231,17 @@
   padding: 0;
   text-align: left;
 }
+#albion-nexus .player-warning {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  color: var(--red);
+  vertical-align: -3px;
+}
+#albion-nexus .player-warning .ui-icon {
+  width: 14px;
+  height: 14px;
+}
 #albion-nexus .rank {
   color: var(--muted);
   width: 14px;

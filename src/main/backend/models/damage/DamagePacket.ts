@@ -12,7 +12,6 @@ export class DamagePacket implements Clonable<DamagePacket> {
   dmg: number = 0
   timestamp: number = 0
   weaponUsed:Item|undefined;
-  //TODO: Analizar y conseguir descubrir el spell utilizado
   spellUsed:Spell;
 
   constructor(dmg: number, weaponUsed:Item, spellUsed:Spell) {

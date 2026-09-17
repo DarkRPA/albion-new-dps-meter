@@ -8,6 +8,8 @@ const shapes = {
   chart: '<path d="M3 3v18h18M6 15l4-5 4 3 6-8"/>',
   skull:
     '<path d="M7 16a8 8 0 1 1 10 0v5H7v-5Zm3 2v3m4-3v3"/><circle cx="9" cy="11" r="1.3"/><circle cx="15" cy="11" r="1.3"/><path d="m11 16 1-2 1 2"/>',
+  warning:
+    '<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3h.01"/>',
   reset: '<path d="M3 10a9 9 0 1 1 2 8M3 4v6h6"/>',
   pause: '<path d="M8 5v14M16 5v14"/>',
   play: '<path d="m7 4 13 8-13 8V4Z"/>',
