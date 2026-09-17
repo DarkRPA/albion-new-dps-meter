@@ -54,13 +54,14 @@ export class PartyController implements Clonable<PartyController>{
      */
     public updatePlayerFromRawData(rawPlayer:RawPlayer):void{
         //Comprobamos que el player realmente está en la party
+        //TODO: En las mists y dragones no funciona bien el DPS pues el ID por alguna razón explota y se muere
         let playerInParty:Array<Player> = this.getPartyMemberFromName(rawPlayer.getName());
         if(playerInParty.length == 0) {
             //Probamos con el GUID
             playerInParty = [this.getPlayerFromGuid(rawPlayer.getGuid())!];
             if(playerInParty.length == 0 || !(playerInParty[0])) return;
         };
-        const player:Player = playerInParty[0];
+        const player:Player = playerInParty[0];6
         
         //Actualizamos sus datos
         player.setWorldMap(rawPlayer.getWorldMap());
