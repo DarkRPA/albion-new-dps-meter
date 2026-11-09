@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { IConfig } from "../models/config/IConfig";
 
 export class ConfigController{
     private static instancia:ConfigController;
-    private config:IConfig|undefined;
+    public config:IConfig|undefined;
 
     public getInstace(){
         if(ConfigController.instancia) return ConfigController.instancia;
