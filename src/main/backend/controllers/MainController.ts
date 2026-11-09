@@ -170,7 +170,7 @@ function route(contexto: any) {
     case 278:
       console.log(params);
       break;
-    case 231:
+    case 230:
       //->
       console.log("JUGADOR LOCAL ENTRA PARTY")
       enterToParty(params)
@@ -181,17 +181,17 @@ function route(contexto: any) {
     // case 230:
     //   leaveParty([0, NetworkListerner.playerList[0].guid]);
     //   break;
-    case 232:
+    case 231:
       console.log("Party disbandeada");
       partyDisbanded();
       break;
-    case 233:
+    case 232:
       //->
       //Entra player party
       console.log("ENTRA PARTY", params);
       playerJoinParty(params)
       break
-    case 235:
+    case 234:
       //->
       //Sale player
       console.log("SALE PARTY", params);
